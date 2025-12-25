@@ -15,6 +15,9 @@
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
+    <!-- Face-API.js for face detection -->
+    <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+    
     <style>
         body {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -78,14 +81,22 @@
         .location-status.ready {
             background: #d4edda;
             color: #155724;
+            border: 2px solid #28a745;
         }
         .location-status.waiting {
             background: #fff3cd;
             color: #856404;
+            border: 2px solid #ffc107;
         }
         .location-status.error {
             background: #f8d7da;
             color: #721c24;
+            border: 2px solid #dc3545;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
         }
         #map {
             height: 250px;
@@ -172,7 +183,11 @@
                         <div id="locationDetails" style="font-size: 0.9em; color: #6c757d;">
                             <div>Latitude: <span id="latitude">-</span></div>
                             <div>Longitude: <span id="longitude">-</span></div>
+                            <div>Akurasi GPS: <span id="accuracy" style="font-weight: bold;">-</span></div>
                         </div>
+                        <button type="button" class="btn btn-sm btn-info w-100 mt-2" id="refreshLocationBtn" style="display: none;">
+                            🔄 Refresh Lokasi untuk Akurasi Lebih Baik
+                        </button>
                         <div id="map"></div>
                     </div>
                 </div>
@@ -217,9 +232,144 @@
         let currentLocation = null;
         let map = null;
         let marker = null;
+        let faceApiLoaded = false;
 
         // Get CSRF token
         const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+        
+        // ===== SECURITY FUNCTIONS =====
+        
+        // Load Face-API models
+        async function loadFaceApiModels() {
+            if (faceApiLoaded) return;
+            
+            try {
+                const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
+                await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+                faceApiLoaded = true;
+                console.log('Face-API models loaded successfully');
+            } catch (error) {
+                console.error('Failed to load Face-API models:', error);
+            }
+        }
+        
+        // Detect face in captured photo
+        async function detectFaceInPhoto() {
+            if (!faceApiLoaded) {
+                await loadFaceApiModels();
+            }
+            
+            if (!capturedPhoto) {
+                return { detected: false, confidence: 0 };
+            }
+            
+            try {
+                // Create image element from base64
+                const img = new Image();
+                img.src = capturedPhoto;
+                
+                await new Promise((resolve) => {
+                    img.onload = resolve;
+                });
+                
+                // Detect faces
+                const detections = await faceapi.detectAllFaces(
+                    img,
+                    new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 })
+                );
+                
+                if (detections && detections.length > 0) {
+                    const detection = detections[0];
+                    const confidence = Math.round(detection.score * 100);
+                    
+                    console.log('Face detected with confidence:', confidence + '%');
+                    
+                    return {
+                        detected: true,
+                        confidence: confidence,
+                        faceCount: detections.length
+                    };
+                } else {
+                    console.warn('No face detected in photo');
+                    return { detected: false, confidence: 0 };
+                }
+            } catch (error) {
+                console.error('Face detection error:', error);
+                // If face detection fails, still allow but log it
+                return { detected: true, confidence: 50 }; // Fallback
+            }
+        }
+        
+        // Generate device fingerprint
+        function getDeviceFingerprint() {
+            const nav = navigator;
+            const screen = window.screen;
+            
+            // Create a unique device ID based on various factors
+            const deviceData = [
+                nav.userAgent,
+                nav.language,
+                screen.width,
+                screen.height,
+                screen.colorDepth,
+                new Date().getTimezoneOffset(),
+                !!window.sessionStorage,
+                !!window.localStorage
+            ].join('|');
+            
+            // Simple hash function
+            let hash = 0;
+            for (let i = 0; i < deviceData.length; i++) {
+                const char = deviceData.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash = hash & hash; // Convert to 32bit integer
+            }
+            
+            const deviceId = 'dev_' + Math.abs(hash).toString(16);
+            
+            // Extract device info
+            const userAgent = nav.userAgent;
+            let deviceModel = 'Unknown';
+            let deviceOs = 'Unknown';
+            
+            // Detect OS
+            if (userAgent.indexOf('Android') > -1) {
+                deviceOs = 'Android';
+                const match = userAgent.match(/Android (\d+(\.\d+)?)/);
+                if (match) deviceOs += ' ' + match[1];
+            } else if (userAgent.indexOf('iPhone') > -1 || userAgent.indexOf('iPad') > -1) {
+                deviceOs = 'iOS';
+                const match = userAgent.match(/OS (\d+(_\d+)?)/);
+                if (match) deviceOs += ' ' + match[1].replace('_', '.');
+            } else if (userAgent.indexOf('Windows') > -1) {
+                deviceOs = 'Windows';
+            } else if (userAgent.indexOf('Mac') > -1) {
+                deviceOs = 'macOS';
+            } else if (userAgent.indexOf('Linux') > -1) {
+                deviceOs = 'Linux';
+            }
+            
+            // Detect device model (simplified)
+            if (userAgent.indexOf('Android') > -1) {
+                const match = userAgent.match(/\(([^)]+)\)/);
+                if (match) {
+                    const parts = match[1].split(';');
+                    deviceModel = parts[parts.length - 1].trim();
+                }
+            } else if (userAgent.indexOf('iPhone') > -1) {
+                deviceModel = 'iPhone';
+            } else if (userAgent.indexOf('iPad') > -1) {
+                deviceModel = 'iPad';
+            }
+            
+            return {
+                device_id: deviceId,
+                device_model: deviceModel,
+                device_os: deviceOs
+            };
+        }
+        
+        // ===== END SECURITY FUNCTIONS =====
 
         // Initialize camera
         async function initCamera() {
@@ -278,52 +428,441 @@
         });
 
         // Get location
+        const attendanceLocations = @json($locations);
+        let watchId = null;
+        let bestAccuracy = Infinity;
+        let attemptCount = 0;
+        const MAX_ATTEMPTS = 5;
+        const GPS_CACHE_KEY = 'attendance_gps_cache';
+        const GPS_CACHE_DURATION = 60000; // 60 seconds
+        let lastKnownPosition = null;
+        let positionHistory = [];
+        
+        // ===== FAKE GPS DETECTION FUNCTIONS =====
+        function detectFakeGPS(position) {
+            const reasons = [];
+            let suspicionScore = 0;
+            
+            // 1. Check if accuracy is suspiciously perfect (0-2 meters)
+            if (position.coords.accuracy < 2) {
+                reasons.push('Akurasi GPS terlalu sempurna (' + position.coords.accuracy.toFixed(1) + 'm) - mencurigakan');
+                suspicionScore += 3;
+            }
+            
+            // 2. Check if altitude is missing (fake GPS often doesn't provide this)
+            if (position.coords.altitude === null || position.coords.altitude === undefined) {
+                reasons.push('Data altitude tidak tersedia - indikasi fake GPS');
+                suspicionScore += 2;
+            }
+            
+            // 3. Check if altitudeAccuracy is missing
+            if (position.coords.altitudeAccuracy === null || position.coords.altitudeAccuracy === undefined) {
+                reasons.push('Data altitudeAccuracy tidak tersedia');
+                suspicionScore += 1;
+            }
+            
+            // 4. Check for impossible speed
+            if (lastKnownPosition) {
+                const timeDiff = (position.timestamp - lastKnownPosition.timestamp) / 1000; // seconds
+                const distance = calculateDistance(
+                    lastKnownPosition.coords.latitude,
+                    lastKnownPosition.coords.longitude,
+                    position.coords.latitude,
+                    position.coords.longitude
+                );
+                const speed = distance / timeDiff; // meters per second
+                
+                // If speed > 50 m/s (180 km/h) it's suspicious
+                if (timeDiff > 1 && speed > 50) {
+                    reasons.push('Perpindahan lokasi tidak wajar (' + Math.round(speed * 3.6) + ' km/jam) - teleportasi terdeteksi');
+                    suspicionScore += 4;
+                }
+            }
+            
+            // 5. Check if heading is missing when there's movement
+            if (position.coords.speed !== null && position.coords.speed > 0.5) {
+                if (position.coords.heading === null || position.coords.heading === undefined) {
+                    reasons.push('Data arah pergerakan (heading) tidak tersedia saat bergerak');
+                    suspicionScore += 1;
+                }
+            }
+            
+            // 6. Check for unrealistic coordinate precision (too many decimal places)
+            const latStr = position.coords.latitude.toString();
+            const lonStr = position.coords.longitude.toString();
+            const latDecimals = latStr.split('.')[1]?.length || 0;
+            const lonDecimals = lonStr.split('.')[1]?.length || 0;
+            
+            if (latDecimals > 8 || lonDecimals > 8) {
+                reasons.push('Presisi koordinat tidak realistis (terlalu banyak desimal)');
+                suspicionScore += 2;
+            }
+            
+            // 7. Check position history for patterns
+            positionHistory.push({
+                lat: position.coords.latitude,
+                lon: position.coords.longitude,
+                time: position.timestamp
+            });
+            
+            // Keep only last 5 positions
+            if (positionHistory.length > 5) {
+                positionHistory.shift();
+            }
+            
+            // Check if positions are exactly the same (fake GPS often returns identical coords)
+            if (positionHistory.length >= 3) {
+                const allSame = positionHistory.every((pos, i, arr) => 
+                    i === 0 || (pos.lat === arr[0].lat && pos.lon === arr[0].lon)
+                );
+                
+                if (allSame && position.coords.speed === 0) {
+                    // This is normal - device is stationary
+                } else if (allSame) {
+                    reasons.push('Koordinat identik pada pembacaan berurutan - pola fake GPS');
+                    suspicionScore += 2;
+                }
+            }
+            
+            // 8. Check timestamp validity
+            const now = Date.now();
+            const positionAge = now - position.timestamp;
+            
+            if (positionAge < -1000) { // Position from future
+                reasons.push('Timestamp GPS dari masa depan - manipulasi waktu terdeteksi');
+                suspicionScore += 5;
+            }
+            
+            if (positionAge > 60000) { // Position older than 1 minute
+                reasons.push('Data GPS terlalu lama (lebih dari 1 menit)');
+                suspicionScore += 1;
+            }
+            
+            // Update last known position
+            lastKnownPosition = position;
+            
+            // Decision: suspicious if score >= 5
+            return {
+                isSuspicious: suspicionScore >= 5,
+                suspicionScore: suspicionScore,
+                reasons: reasons
+            };
+        }
+        
+        // Log fake GPS attempt to server
+        function logFakeGpsAttempt(position, reasons) {
+            fetch('/attendance/log-fake-gps', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                body: JSON.stringify({
+                    latitude: position.coords.latitude,
+                    longitude: position.coords.longitude,
+                    accuracy: position.coords.accuracy,
+                    altitude: position.coords.altitude,
+                    altitudeAccuracy: position.coords.altitudeAccuracy,
+                    heading: position.coords.heading,
+                    speed: position.coords.speed,
+                    timestamp: position.timestamp,
+                    reasons: reasons,
+                    user_agent: navigator.userAgent
+                })
+            }).catch(error => console.error('Failed to log fake GPS attempt:', error));
+        }
+        // ===== END FAKE GPS DETECTION FUNCTIONS =====
+        
+        // Save GPS to localStorage
+        function saveGPSCache(location) {
+            const cache = {
+                latitude: location.latitude,
+                longitude: location.longitude,
+                accuracy: location.accuracy,
+                timestamp: Date.now()
+            };
+            localStorage.setItem(GPS_CACHE_KEY, JSON.stringify(cache));
+        }
+        
+        // Load GPS from localStorage
+        function loadGPSCache() {
+            try {
+                const cached = localStorage.getItem(GPS_CACHE_KEY);
+                if (!cached) return null;
+                
+                const cache = JSON.parse(cached);
+                const age = Date.now() - cache.timestamp;
+                
+                // Only use cache if less than GPS_CACHE_DURATION old
+                if (age > GPS_CACHE_DURATION) {
+                    localStorage.removeItem(GPS_CACHE_KEY);
+                    return null;
+                }
+                
+                return {
+                    latitude: cache.latitude,
+                    longitude: cache.longitude,
+                    accuracy: cache.accuracy
+                };
+            } catch (e) {
+                return null;
+            }
+        }
+        
         function getLocation() {
             if (!navigator.geolocation) {
                 updateLocationStatus('error', 'Browser tidak mendukung geolokasi');
                 return;
             }
+            
+            // Try to load cached GPS first
+            const cachedGPS = loadGPSCache();
+            if (cachedGPS) {
+                currentLocation = cachedGPS;
+                bestAccuracy = cachedGPS.accuracy;
+                
+                document.getElementById('latitude').textContent = currentLocation.latitude.toFixed(8);
+                document.getElementById('longitude').textContent = currentLocation.longitude.toFixed(8);
+                
+                // Display cached accuracy
+                const accuracyEl = document.getElementById('accuracy');
+                accuracyEl.textContent = Math.round(cachedGPS.accuracy) + ' meter';
+                
+                if (cachedGPS.accuracy <= 10) {
+                    accuracyEl.style.color = '#28a745';
+                    accuracyEl.textContent += ' (Sangat Baik ✓) 📦';
+                } else if (cachedGPS.accuracy <= 20) {
+                    accuracyEl.style.color = '#ffc107';
+                    accuracyEl.textContent += ' (Baik) 📦';
+                } else {
+                    accuracyEl.style.color = '#dc3545';
+                    accuracyEl.textContent += ' (Kurang Akurat ⚠️) 📦';
+                }
+                
+                checkLocationRadius();
+                initMap(currentLocation.latitude, currentLocation.longitude, currentLocation.accuracy);
+                checkFormReady();
+                
+                updateLocationStatus('waiting', '📦 Menggunakan lokasi tersimpan. Mencari update...');
+            } else {
+                updateLocationStatus('waiting', '🔍 Mencari sinyal GPS terbaik... (Tunggu 5-10 detik)');
+            }
 
+            // Options for high accuracy GPS
             const options = {
                 enableHighAccuracy: true,
-                timeout: 10000,
+                timeout: 30000,
                 maximumAge: 0
             };
-
-            navigator.geolocation.getCurrentPosition(
+            
+            // Use watchPosition for continuous updates to get best accuracy
+            watchId = navigator.geolocation.watchPosition(
                 function(position) {
-                    currentLocation = {
-                        latitude: position.coords.latitude,
-                        longitude: position.coords.longitude,
-                        accuracy: position.coords.accuracy
-                    };
+                    attemptCount++;
+                    const accuracy = position.coords.accuracy;
                     
-                    document.getElementById('latitude').textContent = currentLocation.latitude.toFixed(8);
-                    document.getElementById('longitude').textContent = currentLocation.longitude.toFixed(8);
-                    updateLocationStatus('ready', 'Lokasi berhasil didapatkan');
+                    // ===== FAKE GPS DETECTION =====
+                    const fakeGpsDetected = detectFakeGPS(position);
                     
-                    // Initialize map
-                    initMap(currentLocation.latitude, currentLocation.longitude);
+                    if (fakeGpsDetected.isSuspicious) {
+                        if (watchId) {
+                            navigator.geolocation.clearWatch(watchId);
+                            watchId = null;
+                        }
+                        
+                        Swal.fire({
+                            icon: 'error',
+                            title: '⚠️ Fake GPS Terdeteksi!',
+                            html: '<div style="text-align: left;">' +
+                                  '<p><strong>Sistem mendeteksi kemungkinan penggunaan Fake GPS!</strong></p>' +
+                                  '<p style="color: #dc3545;">Alasan deteksi:</p>' +
+                                  '<ul style="margin-left: 20px; font-size: 0.9em;">' +
+                                  fakeGpsDetected.reasons.map(r => '<li>' + r + '</li>').join('') +
+                                  '</ul>' +
+                                  '<hr>' +
+                                  '<p><strong>⚠️ PERINGATAN:</strong></p>' +
+                                  '<p style="font-size: 0.9em;">Penggunaan Fake GPS untuk absensi adalah <strong style="color: #dc3545;">PELANGGARAN SERIUS</strong> dan dapat berakibat:</p>' +
+                                  '<ul style="margin-left: 20px; font-size: 0.85em; color: #dc3545;">' +
+                                  '<li>Surat peringatan</li>' +
+                                  '<li>Pemotongan gaji</li>' +
+                                  '<li>Pemutusan hubungan kerja (PHK)</li>' +
+                                  '</ul>' +
+                                  '<p style="font-size: 0.85em; margin-top: 10px;"><strong>Insiden ini telah dicatat dalam sistem audit.</strong></p>' +
+                                  '</div>',
+                            confirmButtonText: 'Saya Mengerti',
+                            confirmButtonColor: '#dc3545',
+                            allowOutsideClick: false,
+                            width: '550px'
+                        });
+                        
+                        updateLocationStatus('error', '❌ Fake GPS terdeteksi! Absensi ditolak.');
+                        document.getElementById('refreshLocationBtn').style.display = 'block';
+                        
+                        // Log to server for audit
+                        logFakeGpsAttempt(position, fakeGpsDetected.reasons);
+                        return;
+                    }
+                    // ===== END FAKE GPS DETECTION =====
                     
-                    checkFormReady();
+                    // Only update if this reading is more accurate
+                    if (accuracy < bestAccuracy || !currentLocation) {
+                        bestAccuracy = accuracy;
+                        
+                        currentLocation = {
+                            latitude: position.coords.latitude,
+                            longitude: position.coords.longitude,
+                            accuracy: accuracy
+                        };
+                        
+                        // Save to cache
+                        saveGPSCache(currentLocation);
+                        
+                        document.getElementById('latitude').textContent = currentLocation.latitude.toFixed(8);
+                        document.getElementById('longitude').textContent = currentLocation.longitude.toFixed(8);
+                        
+                        // Display accuracy with color coding
+                        const accuracyEl = document.getElementById('accuracy');
+                        accuracyEl.textContent = Math.round(accuracy) + ' meter';
+                        
+                        if (accuracy <= 10) {
+                            accuracyEl.style.color = '#28a745'; // Green - Excellent
+                            accuracyEl.textContent += ' (Sangat Baik ✓)';
+                        } else if (accuracy <= 20) {
+                            accuracyEl.style.color = '#ffc107'; // Yellow - Good
+                            accuracyEl.textContent += ' (Baik)';
+                        } else {
+                            accuracyEl.style.color = '#dc3545'; // Red - Poor
+                            accuracyEl.textContent += ' (Kurang Akurat ⚠️)';
+                        }
+                        
+                        // Check distance to nearest location
+                        checkLocationRadius();
+                        
+                        // Initialize/update map
+                        initMap(currentLocation.latitude, currentLocation.longitude, currentLocation.accuracy);
+                        
+                        checkFormReady();
+                    }
+                    
+                    // Stop watching after getting good accuracy or max attempts
+                    if (accuracy <= 10 || attemptCount >= MAX_ATTEMPTS) {
+                        if (watchId) {
+                            navigator.geolocation.clearWatch(watchId);
+                            watchId = null;
+                        }
+                        document.getElementById('refreshLocationBtn').style.display = 'block';
+                    }
                 },
                 function(error) {
+                    if (watchId) {
+                        navigator.geolocation.clearWatch(watchId);
+                        watchId = null;
+                    }
+                    
                     let message = 'Tidak dapat mendapatkan lokasi.';
                     switch(error.code) {
                         case error.PERMISSION_DENIED:
-                            message = 'Izin lokasi ditolak. Silakan berikan izin akses lokasi.';
+                            message = '⛔ Izin lokasi ditolak. Silakan berikan izin akses lokasi.';
                             break;
                         case error.POSITION_UNAVAILABLE:
-                            message = 'Informasi lokasi tidak tersedia.';
+                            message = '📡 Sinyal GPS tidak tersedia. Pastikan GPS aktif dan di area terbuka.';
                             break;
                         case error.TIMEOUT:
-                            message = 'Waktu permintaan lokasi habis.';
+                            message = '⏱️ Timeout. Coba refresh atau pindah ke area dengan sinyal GPS lebih baik.';
                             break;
                     }
                     updateLocationStatus('error', message);
+                    document.getElementById('refreshLocationBtn').style.display = 'block';
                 },
                 options
             );
+        }
+        
+        // Refresh location button
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('refreshLocationBtn').addEventListener('click', function() {
+                attemptCount = 0;
+                bestAccuracy = Infinity;
+                // Clear cache to force fresh GPS reading
+                localStorage.removeItem(GPS_CACHE_KEY);
+                currentLocation = null;
+                this.style.display = 'none';
+                getLocation();
+            });
+        });
+        
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371000; // Earth radius in meters
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                      Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
+        
+        function checkLocationRadius() {
+            if (!attendanceLocations || attendanceLocations.length === 0) {
+                updateLocationStatus('error', 'Tidak ada lokasi absen');
+                return;
+            }
+            
+            let nearestLocation = null;
+            let minDistance = Infinity;
+            
+            attendanceLocations.forEach(location => {
+                const distance = calculateDistance(
+                    currentLocation.latitude,
+                    currentLocation.longitude,
+                    parseFloat(location.latitude),
+                    parseFloat(location.longitude)
+                );
+                
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    nearestLocation = location;
+                }
+            });
+            
+            const distanceRounded = Math.round(minDistance);
+            
+            if (minDistance <= nearestLocation.radius) {
+                updateLocationStatus('ready', '✅ Dalam radius! Jarak: ' + distanceRounded + 'm dari ' + nearestLocation.name);
+            } else {
+                const selisih = Math.round(minDistance - nearestLocation.radius);
+                updateLocationStatus('error', '⚠️ Di luar radius! Jarak: ' + distanceRounded + 'm, Kurang: ' + selisih + 'm lagi ke ' + nearestLocation.name);
+                
+                // Show warning alert with recommendations
+                const accuracyWarning = currentLocation.accuracy > 20 ? 
+                    '<p style="color: #dc3545;"><strong>⚠️ Perhatian:</strong> Akurasi GPS Anda ' + Math.round(currentLocation.accuracy) + ' meter (kurang akurat). Hasil mungkin tidak presisi.</p>' : '';
+                
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Peringatan Lokasi!',
+                    html: '<div style="text-align: left;">' +
+                          '<p>📍 <strong>Lokasi:</strong> ' + nearestLocation.name + '</p>' +
+                          '<p>🎯 <strong>Radius Maksimal:</strong> ' + nearestLocation.radius + ' meter</p>' +
+                          '<p>📏 <strong>Jarak Anda:</strong> ' + distanceRounded + ' meter</p>' +
+                          '<p>⚠️ <strong>Kekurangan:</strong> ' + selisih + ' meter lagi</p>' +
+                          '<p>📡 <strong>Akurasi GPS:</strong> ±' + Math.round(currentLocation.accuracy) + ' meter</p>' +
+                          accuracyWarning +
+                          '<hr>' +
+                          '<p><strong>💡 Tips Meningkatkan Akurasi:</strong></p>' +
+                          '<ul style="margin-left: 20px; font-size: 0.9em;">' +
+                          '<li>Pastikan GPS/Location di HP aktif</li>' +
+                          '<li>Keluar ke area terbuka (hindari dalam gedung)</li>' +
+                          '<li>Tunggu 10-30 detik agar GPS stabil</li>' +
+                          '<li>Klik tombol "Refresh Lokasi" untuk coba lagi</li>' +
+                          '<li>Restart GPS/HP jika tetap tidak akurat</li>' +
+                          '</ul>' +
+                          '</div>',
+                    confirmButtonText: 'Saya Mengerti',
+                    confirmButtonColor: '#667eea',
+                    allowOutsideClick: false,
+                    width: '500px'
+                });
+            }
         }
 
         function updateLocationStatus(status, message) {
@@ -332,7 +871,7 @@
             statusEl.textContent = message;
         }
 
-        function initMap(lat, lng) {
+        function initMap(lat, lng, accuracy) {
             // Show map container
             document.getElementById('map').style.display = 'block';
             
@@ -352,13 +891,23 @@
                     .bindPopup('<strong>Lokasi Anda</strong><br>Lat: ' + lat.toFixed(6) + '<br>Lng: ' + lng.toFixed(6))
                     .openPopup();
                 
-                // Add circle to show accuracy
+                // Add circle to show GPS accuracy
                 L.circle([lat, lng], {
                     color: '#667eea',
                     fillColor: '#764ba2',
                     fillOpacity: 0.2,
-                    radius: 50
+                    radius: accuracy || 50
                 }).addTo(map);
+                
+                // Add circles for all attendance locations
+                @foreach($locations as $location)
+                L.circle([{{ $location->latitude }}, {{ $location->longitude }}], {
+                    color: '#28a745',
+                    fillColor: '#d4edda',
+                    fillOpacity: 0.15,
+                    radius: {{ $location->radius }}
+                }).addTo(map).bindPopup('<strong>{{ $location->name }}</strong><br>Radius: {{ $location->radius }}m');
+                @endforeach
             } else {
                 // Update existing map
                 map.setView([lat, lng], 16);
@@ -382,11 +931,22 @@
             submitBtn.textContent = 'Memproses...';
 
             try {
+                // === SECURITY: Detect face in photo ===
+                const faceDetection = await detectFaceInPhoto();
+                
+                // === SECURITY: Get device fingerprint ===
+                const deviceInfo = getDeviceFingerprint();
+                
                 const formData = {
                     latitude: currentLocation.latitude,
                     longitude: currentLocation.longitude,
                     photo: capturedPhoto,
-                    type: document.querySelector('input[name="type"]:checked').value
+                    type: document.querySelector('input[name="type"]:checked').value,
+                    device_id: deviceInfo.device_id,
+                    device_model: deviceInfo.device_model,
+                    device_os: deviceInfo.device_os,
+                    face_detected: faceDetection.detected,
+                    face_confidence: faceDetection.confidence
                 };
 
                 const response = await fetch('{{ route("attendance.store") }}', {
@@ -461,6 +1021,11 @@
 
         // Initialize on page load
         window.addEventListener('DOMContentLoaded', function() {
+            // Load Face-API models asynchronously
+            loadFaceApiModels().catch(err => {
+                console.error('Failed to load face detection:', err);
+            });
+            
             initCamera();
             getLocation();
         });

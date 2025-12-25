@@ -19,7 +19,7 @@ class RBACManagement extends Page
     
     protected static ?string $navigationGroup = 'Manajemen Super Admin';
     
-    protected static ?int $navigationSort = 3;
+    protected static ?int $navigationSort = 100;
     
     protected static ?string $title = 'Role-Based Access Control';
 

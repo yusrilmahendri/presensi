@@ -27,7 +27,7 @@ class MonthlyRecapReport extends Page implements HasForms
     
     protected static ?string $navigationGroup = 'Laporan';
     
-    protected static ?int $navigationSort = 1;
+    protected static ?int $navigationSort = 30;
     
     public ?array $data = [];
     public $reportData = null;

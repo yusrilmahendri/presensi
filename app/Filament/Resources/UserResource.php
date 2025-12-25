@@ -20,9 +20,9 @@ class UserResource extends Resource
     
     protected static ?string $navigationLabel = 'Karyawan';
     
-    protected static ?string $navigationGroup = 'Manajemen User';
+    protected static ?string $navigationGroup = 'Manajemen Karyawan';
     
-    protected static ?int $navigationSort = 1;
+    protected static ?int $navigationSort = 20;
 
     public static function shouldRegisterNavigation(): bool
     {
@@ -33,7 +33,7 @@ class UserResource extends Resource
         if ($user->isSuperAdmin()) {
             static::$navigationLabel = 'Admin Bisnis';
             static::$navigationGroup = 'Manajemen Super Admin';
-            static::$navigationSort = 2;
+            static::$navigationSort = 100;
             return true;
         }
         
@@ -45,13 +45,21 @@ class UserResource extends Resource
     {
         $query = parent::getEloquentQuery();
         
+        $user = auth()->user();
+        
         // Super admin only sees admin users
-        if (auth()->user()->isSuperAdmin()) {
+        if ($user->isSuperAdmin()) {
             return $query->where('role', 'admin');
         }
         
-        // Regular admin sees their organization's employees
-        return $query->where('role', 'karyawan');
+        // Regular admin sees only their organization's employees
+        if ($user->isAdmin()) {
+            return $query->where('role', 'karyawan')
+                ->where('organization_id', $user->organization_id);
+        }
+        
+        // Fallback: return empty query for other roles
+        return $query->whereRaw('1 = 0');
     }
 
     public static function form(Form $form): Form
@@ -132,7 +140,11 @@ class UserResource extends Resource
                 
                 Forms\Components\Select::make('shift_id')
                     ->label('Shift')
-                    ->relationship('shift', 'name')
+                    ->relationship(
+                        'shift', 
+                        'name',
+                        fn ($query) => $query->where('organization_id', auth()->user()->organization_id)
+                    )
                     ->searchable()
                     ->preload()
                     ->visible(fn ($get) => !$isSuperAdmin && $get('role') === 'karyawan')
@@ -227,11 +239,35 @@ class UserResource extends Resource
             ->filters([
                 Tables\Filters\SelectFilter::make('shift_id')
                     ->label('Shift')
-                    ->relationship('shift', 'name'),
+                    ->relationship(
+                        'shift', 
+                        'name',
+                        fn ($query) => $query->where('organization_id', auth()->user()->organization_id)
+                    )
+                    ->visible(!$isSuperAdmin),
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\ViewAction::make()
+                        ->label('Lihat Detail')
+                        ->icon('heroicon-o-eye')
+                        ->modalHeading('Detail User'),
+                    Tables\Actions\EditAction::make()
+                        ->label('Edit')
+                        ->icon('heroicon-o-pencil'),
+                    Tables\Actions\DeleteAction::make()
+                        ->label('Hapus')
+                        ->icon('heroicon-o-trash')
+                        ->requiresConfirmation()
+                        ->modalHeading('Hapus User')
+                        ->modalDescription('Apakah Anda yakin ingin menghapus user ini? Data yang terhapus tidak dapat dikembalikan.')
+                        ->modalSubmitActionLabel('Ya, Hapus'),
+                ])
+                ->label('Aksi')
+                ->icon('heroicon-m-ellipsis-vertical')
+                ->size('sm')
+                ->color('gray')
+                ->button(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -279,6 +315,7 @@ class UserResource extends Resource
         return [
             'index' => Pages\ListUsers::route('/'),
             'create' => Pages\CreateUser::route('/create'),
+            'view' => Pages\ViewUser::route('/{record}'),
             'edit' => Pages\EditUser::route('/{record}/edit'),
         ];
     }

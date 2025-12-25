@@ -26,7 +26,7 @@ class LateReport extends Page implements HasForms
     
     protected static ?string $navigationGroup = 'Laporan';
     
-    protected static ?int $navigationSort = 2;
+    protected static ?int $navigationSort = 30;
     
     public ?array $data = [];
     public $reportData = null;

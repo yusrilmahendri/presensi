@@ -14,7 +14,7 @@ class FAQ extends Page
     
     protected static ?string $navigationGroup = 'Bantuan';
     
-    protected static ?int $navigationSort = 1;
+    protected static ?int $navigationSort = 50;
     
     protected static ?string $title = 'Frequently Asked Questions';
 

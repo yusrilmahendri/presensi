@@ -22,7 +22,7 @@ class DashboardController extends Controller
         }
 
         // Get today's attendance
-        $today = Carbon::today();
+        $today = Carbon::now('Asia/Jakarta')->startOfDay();
         $todayAttendance = Attendance::where('user_id', $user->id)
             ->whereDate('attendance_time', $today)
             ->orderBy('attendance_time', 'desc')
@@ -30,24 +30,113 @@ class DashboardController extends Controller
 
         $checkInToday = $todayAttendance->where('type', 'check_in')->first();
         $checkOutToday = $todayAttendance->where('type', 'check_out')->first();
+        
+        // Calculate today's check-in status
+        $todayStatus = null;
+        if ($checkInToday && $checkInToday->shift) {
+            $checkInTime = $checkInToday->attendance_time;
+            $shiftStart = \Carbon\Carbon::parse($checkInToday->shift->start_time);
+            $shiftStart->setDate($checkInTime->year, $checkInTime->month, $checkInTime->day);
+            
+            $diffMinutes = $checkInTime->diffInMinutes($shiftStart, false);
+            
+            if ($diffMinutes > 0) {
+                $todayStatus = 'late';
+            } elseif ($diffMinutes >= -15) {
+                $todayStatus = 'on_time';
+            } else {
+                $todayStatus = 'early';
+            }
+        }
+        
+        // Calculate today's check-out status
+        $checkOutStatus = null;
+        if ($checkOutToday && $checkOutToday->shift) {
+            $checkOutTime = $checkOutToday->attendance_time;
+            $shiftEnd = \Carbon\Carbon::parse($checkOutToday->shift->end_time);
+            $shiftEnd->setDate($checkOutTime->year, $checkOutTime->month, $checkOutTime->day);
+            
+            // Handle night shifts (shift end is next day)
+            if ($checkOutToday->shift->end_time < $checkOutToday->shift->start_time) {
+                $shiftEnd->addDay();
+            }
+            
+            $diffMinutes = $checkOutTime->diffInMinutes($shiftEnd, false);
+            
+            if ($diffMinutes > 15) {
+                // Check out more than 15 minutes before shift end
+                $checkOutStatus = 'early';
+            } elseif ($diffMinutes >= -15) {
+                // Check out within ±15 minutes of shift end
+                $checkOutStatus = 'on_time';
+            } else {
+                // Check out more than 15 minutes after shift end (overtime)
+                $checkOutStatus = 'overtime';
+            }
+        }
 
         // Get recent attendances (last 30 days)
         $recentAttendances = Attendance::where('user_id', $user->id)
-            ->with('attendanceLocation')
+            ->with(['attendanceLocation', 'shift'])
             ->orderBy('attendance_time', 'desc')
             ->limit(30)
             ->get();
 
         // Statistics
-        $thisMonth = Carbon::now()->startOfMonth();
+        $thisMonth = Carbon::now('Asia/Jakarta')->startOfMonth();
         $thisMonthAttendance = Attendance::where('user_id', $user->id)
             ->where('attendance_time', '>=', $thisMonth)
             ->count();
 
-        $thisWeek = Carbon::now()->startOfWeek();
+        $thisWeek = Carbon::now('Asia/Jakarta')->startOfWeek();
         $thisWeekAttendance = Attendance::where('user_id', $user->id)
             ->where('attendance_time', '>=', $thisWeek)
             ->count();
+        
+        // Total Check In and Check Out
+        $totalCheckIn = Attendance::where('user_id', $user->id)
+            ->where('type', 'check_in')
+            ->count();
+        
+        $totalCheckOut = Attendance::where('user_id', $user->id)
+            ->where('type', 'check_out')
+            ->count();
+        
+        // Status statistics (late, on-time, early) - calculated manually
+        $checkIns = Attendance::where('user_id', $user->id)
+            ->where('type', 'check_in')
+            ->with('shift')
+            ->get();
+        
+        $totalLate = 0;
+        $totalOnTime = 0;
+        $totalEarly = 0;
+        
+        foreach ($checkIns as $attendance) {
+            if (!$attendance->shift) {
+                continue;
+            }
+            
+            $checkInTime = $attendance->attendance_time;
+            $shiftStart = \Carbon\Carbon::parse($attendance->shift->start_time);
+            
+            // Set same date for comparison
+            $shiftStart->setDate($checkInTime->year, $checkInTime->month, $checkInTime->day);
+            
+            // Calculate difference in minutes
+            $diffMinutes = $checkInTime->diffInMinutes($shiftStart, false);
+            
+            if ($diffMinutes > 0) {
+                // Negative means late (check-in after shift start)
+                $totalLate++;
+            } elseif ($diffMinutes >= -15) {
+                // Within 15 minutes early is on-time
+                $totalOnTime++;
+            } else {
+                // More than 15 minutes early
+                $totalEarly++;
+            }
+        }
 
         // Dynamic greeting based on time (Jakarta timezone)
         $hour = Carbon::now('Asia/Jakarta')->hour;
@@ -65,9 +154,16 @@ class DashboardController extends Controller
             'user',
             'checkInToday',
             'checkOutToday',
+            'todayStatus',
+            'checkOutStatus',
             'recentAttendances',
             'thisMonthAttendance',
             'thisWeekAttendance',
+            'totalCheckIn',
+            'totalCheckOut',
+            'totalLate',
+            'totalOnTime',
+            'totalEarly',
             'greeting'
         ));
     }

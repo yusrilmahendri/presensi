@@ -87,6 +87,9 @@
                         <a class="nav-link" href="{{ route('karyawan.leaves.index') }}">Pengajuan Izin</a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" href="{{ route('shift-change.index') }}">Pergantian Shift</a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" href="{{ route('karyawan.profile') }}">Profile</a>
                     </li>
                     <li class="nav-item">
@@ -115,27 +118,66 @@
 
         <!-- Statistics -->
         <div class="row">
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <div class="card stat-card">
                     <div class="card-body">
-                        <h5>Absen Bulan Ini</h5>
+                        <h5><i class="fas fa-calendar-check"></i> Absen Bulan Ini</h5>
                         <h2>{{ $thisMonthAttendance }}</h2>
                     </div>
                 </div>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <div class="card stat-card">
                     <div class="card-body">
-                        <h5>Absen Minggu Ini</h5>
+                        <h5><i class="fas fa-calendar-week"></i> Absen Minggu Ini</h5>
                         <h2>{{ $thisWeekAttendance }}</h2>
                     </div>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="card stat-card">
+            <div class="col-md-3">
+                <div class="card stat-card" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
                     <div class="card-body">
-                        <h5>Total Absen</h5>
-                        <h2>{{ $user->attendances->count() }}</h2>
+                        <h5><i class="fas fa-sign-in-alt"></i> Total Check In</h5>
+                        <h2>{{ $totalCheckIn }}</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stat-card" style="background: linear-gradient(135deg, #ee0979 0%, #ff6a00 100%);">
+                    <div class="card-body">
+                        <h5><i class="fas fa-sign-out-alt"></i> Total Check Out</h5>
+                        <h2>{{ $totalCheckOut }}</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Statistics -->
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                    <div class="card-body">
+                        <h5><i class="fas fa-clock"></i> Terlambat</h5>
+                        <h2>{{ $totalLate }}</h2>
+                        <small style="opacity: 0.9;">Check in telat dari jadwal</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                    <div class="card-body">
+                        <h5><i class="fas fa-check-circle"></i> Tepat Waktu</h5>
+                        <h2>{{ $totalOnTime }}</h2>
+                        <small style="opacity: 0.9;">Check in sesuai jadwal</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                    <div class="card-body">
+                        <h5><i class="fas fa-star"></i> Lebih Awal</h5>
+                        <h2>{{ $totalEarly }}</h2>
+                        <small style="opacity: 0.9;">Check in lebih awal</small>
                     </div>
                 </div>
             </div>
@@ -150,8 +192,21 @@
                 @if($checkInToday)
                     <div class="today-status status-checkin">
                         <strong>✓ Check In:</strong> {{ $checkInToday->attendance_time->format('d M Y H:i:s') }}
+                        
+                        @if($todayStatus === 'late')
+                            <span class="badge bg-danger ms-2">🕐 Terlambat</span>
+                        @elseif($todayStatus === 'on_time')
+                            <span class="badge bg-success ms-2">✓ Tepat Waktu</span>
+                        @elseif($todayStatus === 'early')
+                            <span class="badge bg-info ms-2">⭐ Lebih Awal</span>
+                        @endif
+                        
                         <br>
                         <small>Lokasi: {{ $checkInToday->attendanceLocation->name ?? 'N/A' }}</small>
+                        @if($checkInToday->shift)
+                            <br>
+                            <small>Shift: {{ $checkInToday->shift->name }} ({{ $checkInToday->shift->start_time }} - {{ $checkInToday->shift->end_time }})</small>
+                        @endif
                     </div>
                 @else
                     <div class="today-status status-pending">
@@ -162,8 +217,21 @@
                 @if($checkOutToday)
                     <div class="today-status status-checkout">
                         <strong>✓ Check Out:</strong> {{ $checkOutToday->attendance_time->format('d M Y H:i:s') }}
+                        
+                        @if($checkOutStatus === 'early')
+                            <span class="badge bg-warning ms-2">🏃 Pulang Lebih Awal</span>
+                        @elseif($checkOutStatus === 'on_time')
+                            <span class="badge bg-success ms-2">✓ Pulang Tepat Waktu</span>
+                        @elseif($checkOutStatus === 'overtime')
+                            <span class="badge bg-info ms-2">💼 Lembur</span>
+                        @endif
+                        
                         <br>
                         <small>Lokasi: {{ $checkOutToday->attendanceLocation->name ?? 'N/A' }}</small>
+                        @if($checkOutToday->shift)
+                            <br>
+                            <small>Shift: {{ $checkOutToday->shift->name }} ({{ $checkOutToday->shift->start_time }} - {{ $checkOutToday->shift->end_time }})</small>
+                        @endif
                     </div>
                 @else
                     @if($checkInToday)
@@ -194,25 +262,150 @@
             </div>
             <div class="card-body">
                 @if($recentAttendances->count() > 0)
+                    <!-- Filter Section -->
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label"><i class="fas fa-filter"></i> Filter Tipe:</label>
+                            <select id="filterType" class="form-select form-select-sm">
+                                <option value="all">Semua Tipe</option>
+                                <option value="check_in">Check In Saja</option>
+                                <option value="check_out">Check Out Saja</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label"><i class="fas fa-filter"></i> Filter Status:</label>
+                            <select id="filterStatus" class="form-select form-select-sm">
+                                <option value="all">Semua Status</option>
+                                <optgroup label="Status Check In">
+                                    <option value="late">🕐 Terlambat</option>
+                                    <option value="on_time">✓ Tepat Waktu</option>
+                                    <option value="early">⭐ Lebih Awal</option>
+                                </optgroup>
+                                <optgroup label="Status Check Out">
+                                    <option value="checkout_early">🏃 Pulang Lebih Awal</option>
+                                    <option value="checkout_on_time">✓ Pulang Tepat Waktu</option>
+                                    <option value="overtime">💼 Lembur</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">&nbsp;</label>
+                            <button id="resetFilter" class="btn btn-secondary btn-sm d-block w-100">
+                                <i class="fas fa-redo"></i> Reset Filter
+                            </button>
+                        </div>
+                    </div>
+                    
                     <div class="table-responsive">
                         <table class="table table-hover">
                             <thead>
                                 <tr>
                                     <th>Tanggal & Waktu</th>
                                     <th>Tipe</th>
+                                    <th>Status</th>
                                     <th>Lokasi</th>
                                     <th>Foto</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody id="attendanceTableBody">
                                 @foreach($recentAttendances as $attendance)
-                                    <tr>
+                                    @php
+                                        $statusValue = 'none';
+                                        if ($attendance->type === 'check_in' && $attendance->shift) {
+                                            $checkInTime = $attendance->attendance_time;
+                                            $shiftStart = \Carbon\Carbon::parse($attendance->shift->start_time);
+                                            $shiftStart->setDate($checkInTime->year, $checkInTime->month, $checkInTime->day);
+                                            $diffMinutes = $checkInTime->diffInMinutes($shiftStart, false);
+                                            
+                                            if ($diffMinutes > 0) {
+                                                $statusValue = 'late';
+                                            } elseif ($diffMinutes >= -15) {
+                                                $statusValue = 'on_time';
+                                            } else {
+                                                $statusValue = 'early';
+                                            }
+                                        } elseif ($attendance->type === 'check_out' && $attendance->shift) {
+                                            $checkOutTime = $attendance->attendance_time;
+                                            $shiftEnd = \Carbon\Carbon::parse($attendance->shift->end_time);
+                                            $shiftEnd->setDate($checkOutTime->year, $checkOutTime->month, $checkOutTime->day);
+                                            
+                                            if ($attendance->shift->end_time < $attendance->shift->start_time) {
+                                                $shiftEnd->addDay();
+                                            }
+                                            
+                                            $diffMinutes = $checkOutTime->diffInMinutes($shiftEnd, false);
+                                            
+                                            if ($diffMinutes > 15) {
+                                                $statusValue = 'checkout_early';
+                                            } elseif ($diffMinutes >= -15) {
+                                                $statusValue = 'checkout_on_time';
+                                            } else {
+                                                $statusValue = 'overtime';
+                                            }
+                                        }
+                                    @endphp
+                                    <tr data-type="{{ $attendance->type }}" data-status="{{ $statusValue }}">
                                         <td>{{ $attendance->attendance_time->format('d M Y H:i:s') }}</td>
                                         <td>
                                             @if($attendance->type === 'check_in')
                                                 <span class="badge bg-success">Check In</span>
                                             @else
                                                 <span class="badge bg-warning">Check Out</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            @if($attendance->type === 'check_in' && $attendance->shift)
+                                                @php
+                                                    $checkInTime = $attendance->attendance_time;
+                                                    $shiftStart = \Carbon\Carbon::parse($attendance->shift->start_time);
+                                                    $shiftStart->setDate($checkInTime->year, $checkInTime->month, $checkInTime->day);
+                                                    $diffMinutes = $checkInTime->diffInMinutes($shiftStart, false);
+                                                    
+                                                    if ($diffMinutes > 0) {
+                                                        $label = 'Terlambat';
+                                                        $badgeClass = 'bg-danger';
+                                                        $icon = '🕐';
+                                                    } elseif ($diffMinutes >= -15) {
+                                                        $label = 'Tepat Waktu';
+                                                        $badgeClass = 'bg-success';
+                                                        $icon = '✓';
+                                                    } else {
+                                                        $label = 'Lebih Awal';
+                                                        $badgeClass = 'bg-info';
+                                                        $icon = '⭐';
+                                                    }
+                                                @endphp
+                                                <span class="badge {{ $badgeClass }}">{{ $icon }} {{ $label }}</span>
+                                            @elseif($attendance->type === 'check_out' && $attendance->shift)
+                                                @php
+                                                    $checkOutTime = $attendance->attendance_time;
+                                                    $shiftEnd = \Carbon\Carbon::parse($attendance->shift->end_time);
+                                                    $shiftEnd->setDate($checkOutTime->year, $checkOutTime->month, $checkOutTime->day);
+                                                    
+                                                    // Handle night shifts
+                                                    if ($attendance->shift->end_time < $attendance->shift->start_time) {
+                                                        $shiftEnd->addDay();
+                                                    }
+                                                    
+                                                    $diffMinutes = $checkOutTime->diffInMinutes($shiftEnd, false);
+                                                    
+                                                    if ($diffMinutes > 15) {
+                                                        $label = 'Pulang Lebih Awal';
+                                                        $badgeClass = 'bg-warning';
+                                                        $icon = '🏃';
+                                                    } elseif ($diffMinutes >= -15) {
+                                                        $label = 'Pulang Tepat Waktu';
+                                                        $badgeClass = 'bg-success';
+                                                        $icon = '✓';
+                                                    } else {
+                                                        $label = 'Lembur';
+                                                        $badgeClass = 'bg-info';
+                                                        $icon = '💼';
+                                                    }
+                                                @endphp
+                                                <span class="badge {{ $badgeClass }}">{{ $icon }} {{ $label }}</span>
+                                            @else
+                                                <span class="text-muted">-</span>
                                             @endif
                                         </td>
                                         <td>{{ $attendance->attendanceLocation->name ?? 'N/A' }}</td>
@@ -280,6 +473,74 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
     <script>
+        // Attendance Filter
+        document.addEventListener('DOMContentLoaded', function() {
+            const filterType = document.getElementById('filterType');
+            const filterStatus = document.getElementById('filterStatus');
+            const resetFilter = document.getElementById('resetFilter');
+            const tableRows = document.querySelectorAll('#attendanceTableBody tr');
+            
+            function applyFilters() {
+                const selectedType = filterType.value;
+                const selectedStatus = filterStatus.value;
+                let visibleCount = 0;
+                
+                tableRows.forEach(row => {
+                    if (row.classList.contains('no-data-row')) return;
+                    
+                    const rowType = row.getAttribute('data-type');
+                    const rowStatus = row.getAttribute('data-status');
+                    
+                    let showRow = true;
+                    
+                    // Filter by type
+                    if (selectedType !== 'all' && rowType !== selectedType) {
+                        showRow = false;
+                    }
+                    
+                    // Filter by status
+                    if (selectedStatus !== 'all' && rowStatus !== selectedStatus) {
+                        showRow = false;
+                    }
+                    
+                    if (showRow) {
+                        row.style.display = '';
+                        visibleCount++;
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+                
+                // Show message if no results
+                const tbody = document.getElementById('attendanceTableBody');
+                let noDataRow = tbody.querySelector('.no-data-row');
+                
+                if (visibleCount === 0) {
+                    if (!noDataRow) {
+                        noDataRow = document.createElement('tr');
+                        noDataRow.className = 'no-data-row';
+                        noDataRow.innerHTML = '<td colspan="5" class="text-center text-muted py-3"><i class="fas fa-search"></i> Tidak ada data yang sesuai dengan filter.</td>';
+                        tbody.appendChild(noDataRow);
+                    }
+                } else {
+                    if (noDataRow) {
+                        noDataRow.remove();
+                    }
+                }
+            }
+            
+            if (filterType && filterStatus && resetFilter) {
+                filterType.addEventListener('change', applyFilters);
+                filterStatus.addEventListener('change', applyFilters);
+                
+                resetFilter.addEventListener('click', function() {
+                    filterType.value = 'all';
+                    filterStatus.value = 'all';
+                    applyFilters();
+                });
+            }
+        });
+        
         // Handle export modal
         const exportModal = document.getElementById('exportModal');
         const exportForm = document.getElementById('exportForm');

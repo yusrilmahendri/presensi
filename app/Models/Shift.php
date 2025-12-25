@@ -32,7 +32,15 @@ class Shift extends Model
 
     public function isActiveAt($time = null): bool
     {
-        $currentTime = $time ? \Carbon\Carbon::parse($time) : \Carbon\Carbon::now();
+        // Accept both Carbon instance and string time
+        if ($time instanceof \Carbon\Carbon) {
+            $currentTime = $time;
+        } elseif ($time) {
+            $currentTime = \Carbon\Carbon::parse($time);
+        } else {
+            $currentTime = \Carbon\Carbon::now();
+        }
+        
         $currentHour = (int) $currentTime->format('H');
         $currentMinute = (int) $currentTime->format('i');
         $currentTotalMinutes = $currentHour * 60 + $currentMinute;
@@ -44,7 +52,7 @@ class Shift extends Model
         $endParts = explode(':', $this->end_time);
         $endTotalMinutes = ((int) $endParts[0]) * 60 + ((int) $endParts[1]);
 
-        // Handle shift that spans midnight (e.g., 23:00 to 07:00)
+        // Handle shift that spans midnight (e.g., 20:00 to 04:00)
         if ($startTotalMinutes > $endTotalMinutes) {
             // Shift spans midnight
             return $currentTotalMinutes >= $startTotalMinutes || $currentTotalMinutes < $endTotalMinutes;

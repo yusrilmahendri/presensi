@@ -4,6 +4,7 @@ use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LeaveController;
+use App\Http\Controllers\ShiftChangeRequestController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -38,8 +39,14 @@ Route::middleware('auth')->group(function () {
     Route::get('/leaves', [LeaveController::class, 'index'])->name('karyawan.leaves.index');
     Route::post('/leaves', [LeaveController::class, 'store'])->name('karyawan.leaves.store');
     
+    // Shift Change Request routes for karyawan
+    Route::get('/shift-change', [ShiftChangeRequestController::class, 'index'])->name('shift-change.index');
+    Route::post('/shift-change', [ShiftChangeRequestController::class, 'store'])->name('shift-change.store');
+    Route::delete('/shift-change/{id}', [ShiftChangeRequestController::class, 'cancel'])->name('shift-change.cancel');
+    
     // Attendance routes - require login
     Route::get('/presensi', [AttendanceController::class, 'index'])->name('attendance.index');
     Route::post('/presensi', [AttendanceController::class, 'store'])->name('attendance.store');
+    Route::post('/attendance/log-fake-gps', [AttendanceController::class, 'logFakeGps'])->name('attendance.log-fake-gps');
 });
 
