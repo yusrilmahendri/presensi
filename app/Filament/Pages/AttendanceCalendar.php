@@ -17,6 +17,7 @@ class AttendanceCalendar extends Page
     protected static ?string $navigationGroup = 'Absensi';
 
     protected static ?int $navigationSort = 10;
+    public $year;
     public $month;
     public $attendanceData = [];
     

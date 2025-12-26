@@ -14,6 +14,9 @@ class AttendanceChart extends ChartWidget
     protected int | string | array $columnSpan = 'full';
     
     protected static ?int $sort = 3;
+    
+    // Batasi tinggi chart agar tidak terlalu besar
+    protected static ?string $maxHeight = '300px';
 
     public function getHeading(): string
     {
@@ -40,6 +43,31 @@ class AttendanceChart extends ChartWidget
         }
         
         return 'pie';
+    }
+    
+    protected function getOptions(): array
+    {
+        if (auth()->user()->role === 'super_admin') {
+            return [
+                'maintainAspectRatio' => false,
+            ];
+        }
+        
+        return [
+            'maintainAspectRatio' => true,
+            'aspectRatio' => 2,
+            'plugins' => [
+                'legend' => [
+                    'position' => 'bottom',
+                    'labels' => [
+                        'padding' => 15,
+                        'font' => [
+                            'size' => 12,
+                        ],
+                    ],
+                ],
+            ],
+        ];
     }
     
     /**
