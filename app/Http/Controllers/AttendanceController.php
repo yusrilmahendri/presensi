@@ -145,48 +145,6 @@ class AttendanceController extends Controller
             ], 400);
         }
 
-        // Check if current time is within shift hours (with tolerance)
-        $currentTime = Carbon::now('Asia/Jakarta');
-        $shiftStart = Carbon::parse($user->shift->start_time);
-        $shiftEnd = Carbon::parse($user->shift->end_time);
-        
-        // Add tolerance: 2 hours before and 2 hours after shift
-        $tolerance = 120; // minutes
-        $shiftStartWithTolerance = $shiftStart->copy()->subMinutes($tolerance);
-        $shiftEndWithTolerance = $shiftEnd->copy()->addMinutes($tolerance);
-        
-        // Handle overnight shifts
-        if ($shiftEnd->lt($shiftStart)) {
-            $shiftEnd->addDay();
-            $shiftEndWithTolerance->addDay();
-        }
-        
-        $currentTimeOnly = Carbon::createFromFormat('H:i:s', $currentTime->format('H:i:s'));
-        $isWithinShift = false;
-        
-        if ($shiftEnd->gt($shiftStart)) {
-            // Normal shift (same day)
-            $isWithinShift = $currentTimeOnly->between(
-                $shiftStartWithTolerance->copy()->setDate($currentTimeOnly->year, $currentTimeOnly->month, $currentTimeOnly->day),
-                $shiftEndWithTolerance->copy()->setDate($currentTimeOnly->year, $currentTimeOnly->month, $currentTimeOnly->day)
-            );
-        } else {
-            // Overnight shift
-            $isWithinShift = $currentTimeOnly->gte($shiftStartWithTolerance->copy()->setDate($currentTimeOnly->year, $currentTimeOnly->month, $currentTimeOnly->day)) ||
-                            $currentTimeOnly->lte($shiftEndWithTolerance->copy()->setDate($currentTimeOnly->year, $currentTimeOnly->month, $currentTimeOnly->day));
-        }
-        
-        if (!$isWithinShift) {
-            return response()->json([
-                'success' => false,
-                'message' => '⏰ Absensi hanya dapat dilakukan dalam jam shift Anda!\n\n' .
-                            '🕒 Shift: ' . $user->shift->name . '\n' .
-                            '⏰ Jam: ' . $shiftStart->format('H:i') . ' - ' . $shiftEnd->format('H:i') . '\n' .
-                            '📍 Waktu sekarang: ' . $currentTime->format('H:i') . '\n\n' .
-                            '💡 Anda dapat melakukan absensi 2 jam sebelum hingga 2 jam setelah jam shift.'
-            ], 400);
-        }
-
         // Find nearest location within organization
         $locations = AttendanceLocation::where('organization_id', $user->organization_id)->get();
         
@@ -273,31 +231,60 @@ class AttendanceController extends Controller
         $filePath = 'attendances/' . $fileName;
         Storage::disk('public')->put($filePath, $image);
 
+        // Determine attendance status for check-in
+        $status = null;
+        if ($request->type === 'check_in' && $user->shift) {
+            $currentTime = Carbon::now('Asia/Jakarta');
+            $shiftStart = Carbon::parse($user->shift->start_time);
+            $shiftStart->setDate($currentTime->year, $currentTime->month, $currentTime->day);
+            
+            // Calculate difference in minutes (negative = early, positive = late)
+            $diffMinutes = $currentTime->diffInMinutes($shiftStart, false);
+            
+            if ($diffMinutes < -15) {
+                // More than 15 minutes before shift start
+                $status = 'early';
+            } elseif ($diffMinutes <= 0) {
+                // Within 15 minutes before shift or exactly on time
+                $status = 'on_time';
+            } else {
+                // After shift start time
+                $status = 'late';
+            }
+        }
+
         // Create attendance record
         $attendance = Attendance::create([
             'user_id' => $user->id,
             'shift_id' => $user->shift_id,
             'attendance_location_id' => $nearestLocation->id,
             'type' => $request->type,
+            'status' => $status,
             'attendance_time' => Carbon::now('Asia/Jakarta'),
             'latitude' => $request->latitude,
             'longitude' => $request->longitude,
             'photo' => $filePath,
-            'device_id' => $request->device_id,
-            'device_model' => $request->device_model,
-            'device_os' => $request->device_os,
-            'ip_address' => $request->ip(),
-            'user_agent' => $request->userAgent(),
-            'face_detected' => $request->face_detected ?? false,
-            'face_confidence' => $request->face_confidence,
         ]);
+        
+        // Add status message for check-in
+        $statusMessage = '';
+        if ($request->type === 'check_in' && $status) {
+            if ($status === 'late') {
+                $statusMessage = ' Anda terlambat.';
+            } elseif ($status === 'early') {
+                $statusMessage = ' Anda lebih awal.';
+            } else {
+                $statusMessage = ' Tepat waktu!';
+            }
+        }
 
         return response()->json([
             'success' => true,
-            'message' => ucfirst($request->type === 'check_in' ? 'Check In' : 'Check Out') . ' berhasil!',
+            'message' => ucfirst($request->type === 'check_in' ? 'Check In' : 'Check Out') . ' berhasil!' . $statusMessage,
             'data' => [
                 'attendance_time' => $attendance->attendance_time->format('d M Y H:i:s'),
                 'location' => $nearestLocation->name,
+                'status' => $status,
             ]
         ]);
     }

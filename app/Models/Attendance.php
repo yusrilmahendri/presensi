@@ -15,6 +15,7 @@ class Attendance extends Model
         'shift_id',
         'attendance_location_id',
         'type',
+        'status',
         'attendance_time',
         'latitude',
         'longitude',

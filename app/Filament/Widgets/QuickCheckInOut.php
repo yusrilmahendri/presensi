@@ -36,44 +36,6 @@ class QuickCheckInOut extends Widget
                 return;
             }
             
-            // Check if current time is within shift hours (with tolerance)
-            if ($user->shift) {
-                $currentTime = Carbon::now('Asia/Jakarta');
-                $shiftStart = Carbon::parse($user->shift->start_time);
-                $shiftEnd = Carbon::parse($user->shift->end_time);
-                
-                // Add tolerance: 2 hours before and 2 hours after shift
-                $tolerance = 120; // minutes
-                $shiftStartWithTolerance = $shiftStart->copy()->subMinutes($tolerance);
-                $shiftEndWithTolerance = $shiftEnd->copy()->addMinutes($tolerance);
-                
-                // Handle overnight shifts
-                if ($shiftEnd->lt($shiftStart)) {
-                    $shiftEnd->addDay();
-                    $shiftEndWithTolerance->addDay();
-                }
-                
-                $currentTimeOnly = Carbon::createFromFormat('H:i:s', $currentTime->format('H:i:s'));
-                $isWithinShift = false;
-                
-                if ($shiftEnd->gt($shiftStart)) {
-                    // Normal shift (same day)
-                    $isWithinShift = $currentTimeOnly->between(
-                        $shiftStartWithTolerance->copy()->setDate($currentTimeOnly->year, $currentTimeOnly->month, $currentTimeOnly->day),
-                        $shiftEndWithTolerance->copy()->setDate($currentTimeOnly->year, $currentTimeOnly->month, $currentTimeOnly->day)
-                    );
-                } else {
-                    // Overnight shift
-                    $isWithinShift = $currentTimeOnly->gte($shiftStartWithTolerance->copy()->setDate($currentTimeOnly->year, $currentTimeOnly->month, $currentTimeOnly->day)) ||
-                                    $currentTimeOnly->lte($shiftEndWithTolerance->copy()->setDate($currentTimeOnly->year, $currentTimeOnly->month, $currentTimeOnly->day));
-                }
-                
-                if (!$isWithinShift) {
-                    $this->dispatch('check-in-error', message: 'Absensi hanya dapat dilakukan dalam jam shift Anda (' . $user->shift->name . ': ' . $shiftStart->format('H:i') . ' - ' . $shiftEnd->format('H:i') . '). Toleransi: 2 jam sebelum/sesudah.');
-                    return;
-                }
-            }
-            
             // Check if already checked in today
             $existingCheckIn = Attendance::where('user_id', $user->id)
                 ->where('type', 'check_in')
@@ -93,19 +55,48 @@ class QuickCheckInOut extends Widget
                 return;
             }
             
+            // Determine attendance status
+            $status = null;
+            if ($user->shift) {
+                $currentTime = Carbon::now('Asia/Jakarta');
+                $shiftStart = Carbon::parse($user->shift->start_time);
+                $shiftStart->setDate($currentTime->year, $currentTime->month, $currentTime->day);
+                
+                // Calculate difference in minutes (negative = early, positive = late)
+                $diffMinutes = $currentTime->diffInMinutes($shiftStart, false);
+                
+                if ($diffMinutes < -15) {
+                    $status = 'early';
+                } elseif ($diffMinutes <= 0) {
+                    $status = 'on_time';
+                } else {
+                    $status = 'late';
+                }
+            }
+            
             // Create attendance record
             Attendance::create([
                 'user_id' => $user->id,
                 'shift_id' => $user->shift_id,
                 'attendance_location_id' => $location->id,
                 'type' => 'check_in',
+                'status' => $status,
                 'attendance_time' => now(),
                 'latitude' => 0, // Will be updated via GPS if needed
                 'longitude' => 0,
                 'notes' => 'Check-in melalui quick button',
             ]);
             
-            $this->dispatch('check-in-success', message: 'Check-in berhasil!');
+            $statusMessage = '';
+            if ($status === 'late') {
+                $statusMessage = ' Anda terlambat.';
+            } elseif ($status === 'early') {
+                $statusMessage = ' Anda lebih awal.';
+            } else {
+                $statusMessage = ' Tepat waktu!';
+            }
+            
+            $this->dispatch('check-in-success', message: 'Check-in berhasil!' . $statusMessage);
             $this->dispatch('$refresh');
             
         } catch (\Exception $e) {
@@ -129,44 +120,6 @@ class QuickCheckInOut extends Widget
             if ($hasLeaveToday) {
                 $this->dispatch('check-out-error', message: 'Anda tidak dapat melakukan check-out karena sedang dalam masa cuti/izin yang telah disetujui.');
                 return;
-            }
-            
-            // Check if current time is within shift hours (with tolerance)
-            if ($user->shift) {
-                $currentTime = Carbon::now('Asia/Jakarta');
-                $shiftStart = Carbon::parse($user->shift->start_time);
-                $shiftEnd = Carbon::parse($user->shift->end_time);
-                
-                // Add tolerance: 2 hours before and 2 hours after shift
-                $tolerance = 120; // minutes
-                $shiftStartWithTolerance = $shiftStart->copy()->subMinutes($tolerance);
-                $shiftEndWithTolerance = $shiftEnd->copy()->addMinutes($tolerance);
-                
-                // Handle overnight shifts
-                if ($shiftEnd->lt($shiftStart)) {
-                    $shiftEnd->addDay();
-                    $shiftEndWithTolerance->addDay();
-                }
-                
-                $currentTimeOnly = Carbon::createFromFormat('H:i:s', $currentTime->format('H:i:s'));
-                $isWithinShift = false;
-                
-                if ($shiftEnd->gt($shiftStart)) {
-                    // Normal shift (same day)
-                    $isWithinShift = $currentTimeOnly->between(
-                        $shiftStartWithTolerance->copy()->setDate($currentTimeOnly->year, $currentTimeOnly->month, $currentTimeOnly->day),
-                        $shiftEndWithTolerance->copy()->setDate($currentTimeOnly->year, $currentTimeOnly->month, $currentTimeOnly->day)
-                    );
-                } else {
-                    // Overnight shift
-                    $isWithinShift = $currentTimeOnly->gte($shiftStartWithTolerance->copy()->setDate($currentTimeOnly->year, $currentTimeOnly->month, $currentTimeOnly->day)) ||
-                                    $currentTimeOnly->lte($shiftEndWithTolerance->copy()->setDate($currentTimeOnly->year, $currentTimeOnly->month, $currentTimeOnly->day));
-                }
-                
-                if (!$isWithinShift) {
-                    $this->dispatch('check-out-error', message: 'Absensi hanya dapat dilakukan dalam jam shift Anda (' . $user->shift->name . ': ' . $shiftStart->format('H:i') . ' - ' . $shiftEnd->format('H:i') . '). Toleransi: 2 jam sebelum/sesudah.');
-                    return;
-                }
             }
             
             // Check if already checked out today
