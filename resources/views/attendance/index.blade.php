@@ -138,7 +138,7 @@
             <div class="d-flex justify-content-between align-items-center mb-4 header-section">
                 <h2 class="mb-0">{{ $user->organization->name ?? 'Sistem Presensi' }}</h2>
                 <div class="header-actions">
-                    <a href="{{ route('karyawan.dashboard') }}" class="btn btn-sm btn-outline-primary">Dasbor</a>
+                    <a href="{{ route('karyawan.dashboard') }}" class="btn btn-sm btn-outline-primary">Dashboard</a>
                     <a href="{{ route('karyawan.profile') }}" class="btn btn-sm btn-outline-secondary">Profil</a>
                     <form method="POST" action="{{ route('karyawan.logout') }}" class="d-inline">
                         @csrf

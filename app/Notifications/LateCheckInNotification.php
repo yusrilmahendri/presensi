@@ -32,7 +32,7 @@ class LateCheckInNotification extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-        return ['database']; // Only database, no email spam
+        return ['mail', 'database']; // Send email and save to database
     }
 
     /**

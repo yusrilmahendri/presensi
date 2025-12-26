@@ -396,8 +396,8 @@
                 <div class="icon-wrapper">
                     <i class="fas fa-user-circle"></i>
                 </div>
-                <h2>Login Sistem Presensi</h2>
-                <p>Admin & Karyawan - Silakan masuk dengan akun Anda.</p>
+                <h2>Selamat Datang di PioneerHadir</h2>
+                <p>Silahkan login dengan akun Anda.</p>
             </div>
 
             <div class="login-body">
@@ -427,7 +427,7 @@
                                    value="{{ old('login') }}" 
                                    required 
                                    autofocus
-                                   placeholder="Username (admin) / NIK / NIP / Email">
+                                   placeholder="Gunakan NIK/NIP/Email">
                             @error('login')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror

@@ -14,6 +14,8 @@ class AttendanceCalendar extends Page
     
     protected static ?string $navigationLabel = 'Kalender Kehadiran';
     
+    protected static ?string $title = 'Kalender Kehadiran';
+    
     protected static ?string $navigationGroup = 'Absensi';
 
     protected static ?int $navigationSort = 10;

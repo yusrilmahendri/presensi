@@ -76,12 +76,17 @@
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{{ route('karyawan.dashboard') }}">
-                            <i class="fas fa-tachometer-alt"></i> Dasbor
+                            <i class="fas fa-tachometer-alt"></i> Dashboard
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{{ route('karyawan.leaves.index') }}">
                             <i class="fas fa-file-alt"></i> Pengajuan Izin
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('karyawan.overtime.index') }}">
+                            <i class="fas fa-clock"></i> Lembur
                         </a>
                     </li>
                     <li class="nav-item">

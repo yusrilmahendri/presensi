@@ -14,11 +14,12 @@ class ListLeaves extends ListRecords
 
     protected function getHeaderActions(): array
     {
-        return [
-            Actions\CreateAction::make(),
-        ];
+        // Admin tidak bisa membuat pengajuan, hanya karyawan yang bisa mengajukan
+        return [];
     }
 
+    protected ?string $heading = 'Pengajuan Izin';
+    
     public function getTabs(): array
     {
         return [

@@ -12,11 +12,13 @@ class KaryawanDashboard extends Page
     
     public static function shouldRegisterNavigation(): bool
     {
-        return auth()->user()->role !== 'super_admin';
+        // Fitur dinonaktifkan
+        return false;
     }
     
     public static function canAccess(): bool
     {
-        return auth()->user()->role !== 'super_admin';
+        // Fitur dinonaktifkan
+        return false;
     }
 }

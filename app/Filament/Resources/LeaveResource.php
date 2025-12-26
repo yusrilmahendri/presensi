@@ -277,6 +277,13 @@ class LeaveResource extends Resource
                             'approved_at' => now(),
                             'admin_notes' => $data['admin_notes'] ?? null,
                         ]);
+                        
+                        // Send notification to employee
+                        $record->user->notify(new \App\Notifications\LeaveStatusNotification(
+                            $record,
+                            'approved',
+                            $data['admin_notes'] ?? null
+                        ));
                     })
                     ->successNotificationTitle('Pengajuan izin berhasil disetujui')
                     ->visible(fn (Leave $record): bool => $record->isPending()),
@@ -298,13 +305,23 @@ class LeaveResource extends Resource
                             'approved_at' => now(),
                             'admin_notes' => $data['admin_notes'],
                         ]);
+                        
+                        // Send notification to employee
+                        $record->user->notify(new \App\Notifications\LeaveStatusNotification(
+                            $record,
+                            'rejected',
+                            $data['admin_notes']
+                        ));
                     })
                     ->successNotificationTitle('Pengajuan izin berhasil ditolak')
                     ->visible(fn (Leave $record): bool => $record->isPending()),
-                Tables\Actions\ViewAction::make(),
+                Tables\Actions\ViewAction::make()
+                    ->label('Lihat'),
                 Tables\Actions\EditAction::make()
+                    ->label('Ubah')
                     ->visible(fn (Leave $record): bool => $record->isPending()),
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\DeleteAction::make()
+                    ->label('Hapus'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -363,7 +380,8 @@ class LeaveResource extends Resource
                         })
                         ->deselectRecordsAfterCompletion()
                         ->successNotificationTitle('Pengajuan berhasil ditolak'),
-                    Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\DeleteBulkAction::make()
+                        ->label('Hapus Terpilih'),
                 ]),
             ])
             ->defaultSort('created_at', 'desc');

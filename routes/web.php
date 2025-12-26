@@ -4,6 +4,7 @@ use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LeaveController;
+use App\Http\Controllers\OvertimeController;
 use App\Http\Controllers\ShiftChangeRequestController;
 use Illuminate\Support\Facades\Route;
 
@@ -38,6 +39,11 @@ Route::middleware('auth')->group(function () {
     // Leave routes for karyawan
     Route::get('/leaves', [LeaveController::class, 'index'])->name('karyawan.leaves.index');
     Route::post('/leaves', [LeaveController::class, 'store'])->name('karyawan.leaves.store');
+    
+    // Overtime routes for karyawan
+    Route::get('/overtime', [OvertimeController::class, 'index'])->name('karyawan.overtime.index');
+    Route::post('/overtime', [OvertimeController::class, 'store'])->name('karyawan.overtime.store');
+    Route::delete('/overtime/{id}', [OvertimeController::class, 'cancel'])->name('karyawan.overtime.cancel');
     
     // Shift Change Request routes for karyawan
     Route::get('/shift-change', [ShiftChangeRequestController::class, 'index'])->name('shift-change.index');

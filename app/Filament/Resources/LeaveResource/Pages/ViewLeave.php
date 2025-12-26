@@ -9,11 +9,14 @@ use Filament\Resources\Pages\ViewRecord;
 class ViewLeave extends ViewRecord
 {
     protected static string $resource = LeaveResource::class;
+    
+    protected ?string $heading = 'Detail Pengajuan Izin';
 
     protected function getHeaderActions(): array
     {
         return [
-            Actions\EditAction::make(),
+            Actions\EditAction::make()
+                ->label('Ubah'),
         ];
     }
 }

@@ -73,10 +73,16 @@
                         <a class="nav-link" href="{{ route('attendance.index') }}">Absen</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ route('karyawan.dashboard') }}">Dasbor</a>
+                        <a class="nav-link" href="{{ route('karyawan.dashboard') }}">Dashboard</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{{ route('karyawan.leaves.index') }}">Pengajuan Izin</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('karyawan.overtime.index') }}">Lembur</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('shift-change.index') }}">Ganti Shift</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link active" href="{{ route('karyawan.profile') }}">Profil</a>

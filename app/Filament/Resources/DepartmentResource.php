@@ -17,7 +17,28 @@ class DepartmentResource extends Resource
 {
     protected static ?string $model = Department::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-building-office';
+    
+    protected static ?string $navigationLabel = 'Departemen';
+    
+    protected static ?string $navigationGroup = 'Manajemen Karyawan';
+    
+    protected static ?int $navigationSort = 20;
+    
+    public static function shouldRegisterNavigation(): bool
+    {
+        // Hanya tampilkan jika admin dan karyawan >= 15
+        $user = auth()->user();
+        if (!$user || $user->role !== 'admin') {
+            return false;
+        }
+        
+        $totalKaryawan = \App\Models\User::where('organization_id', $user->organization_id)
+            ->where('role', 'karyawan')
+            ->count();
+            
+        return $totalKaryawan >= 15;
+    }
 
     public static function form(Form $form): Form
     {

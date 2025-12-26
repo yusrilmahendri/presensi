@@ -17,16 +17,41 @@ class AuditLogResource extends Resource
 {
     protected static ?string $model = AuditLog::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-list';
+    
+    protected static ?string $navigationLabel = 'Log Aktivitas';
+    
+    protected static ?string $modelLabel = 'Log Aktivitas';
+    
+    protected static ?string $pluralModelLabel = 'Log Aktivitas';
+    
+    protected static ?string $navigationGroup = 'Laporan';
+    
+    protected static ?int $navigationSort = 40;
     
     public static function shouldRegisterNavigation(): bool
     {
-        return auth()->user()->role !== 'super_admin';
+        return auth()->user()->role === 'admin';
     }
     
     public static function canViewAny(): bool
     {
-        return auth()->user()->role !== 'super_admin';
+        return auth()->user()->role === 'admin';
+    }
+    
+    public static function canCreate(): bool
+    {
+        return false;
+    }
+    
+    public static function canEdit($record): bool
+    {
+        return false;
+    }
+    
+    public static function canDelete($record): bool
+    {
+        return false;
     }
 
     public static function form(Form $form): Form
@@ -61,23 +86,54 @@ class AuditLogResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('organization.name')
-                    ->numeric()
+                Tables\Columns\TextColumn::make('created_at')
+                    ->label('Waktu')
+                    ->dateTime('d M Y H:i:s')
                     ->sortable(),
+                    
                 Tables\Columns\TextColumn::make('user.name')
-                    ->numeric()
-                    ->sortable(),
+                    ->label('User')
+                    ->searchable()
+                    ->sortable()
+                    ->default('Sistem'),
+                    
                 Tables\Columns\TextColumn::make('event')
+                    ->label('Aktivitas')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'created' => 'success',
+                        'updated' => 'info',
+                        'deleted' => 'danger',
+                        'login' => 'success',
+                        'logout' => 'warning',
+                        default => 'gray',
+                    })
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                        'created' => 'Dibuat',
+                        'updated' => 'Diubah',
+                        'deleted' => 'Dihapus',
+                        'login' => 'Login',
+                        'logout' => 'Logout',
+                        'approved' => 'Disetujui',
+                        'rejected' => 'Ditolak',
+                        'fake_gps_detected' => 'GPS Palsu Terdeteksi',
+                        'no_face_detected' => 'Wajah Tidak Terdeteksi',
+                        'low_face_confidence' => 'Kualitas Wajah Rendah',
+                        'device_change_detected' => 'Pergantian Device',
+                        default => ucfirst($state),
+                    })
                     ->searchable(),
-                Tables\Columns\TextColumn::make('auditable_type')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('auditable_id')
-                    ->numeric()
-                    ->sortable(),
+                    
+                Tables\Columns\TextColumn::make('description')
+                    ->label('Deskripsi')
+                    ->limit(50)
+                    ->searchable()
+                    ->wrap(),
+                    
                 Tables\Columns\TextColumn::make('ip_address')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('user_agent')
-                    ->searchable(),
+                    ->label('IP Address')
+                    ->searchable()
+                    ->toggleable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()

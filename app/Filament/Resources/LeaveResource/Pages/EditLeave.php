@@ -9,12 +9,16 @@ use Filament\Resources\Pages\EditRecord;
 class EditLeave extends EditRecord
 {
     protected static string $resource = LeaveResource::class;
+    
+    protected ?string $heading = 'Ubah Pengajuan Izin';
 
     protected function getHeaderActions(): array
     {
         return [
-            Actions\ViewAction::make(),
-            Actions\DeleteAction::make(),
+            Actions\ViewAction::make()
+                ->label('Lihat'),
+            Actions\DeleteAction::make()
+                ->label('Hapus'),
         ];
     }
 }
