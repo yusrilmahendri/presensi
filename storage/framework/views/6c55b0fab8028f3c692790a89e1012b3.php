@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Dashboard - {{ $user->organization->name ?? 'Sistem Presensi' }}</title>
+    <meta name="csrf-token" content="<?php echo e(csrf_token()); ?>">
+    <title>Dashboard - <?php echo e($user->organization->name ?? 'Sistem Presensi'); ?></title>
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -71,33 +71,33 @@
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container-fluid">
-            <a class="navbar-brand" href="#">{{ $user->organization->name ?? 'Sistem Presensi' }}</a>
+            <a class="navbar-brand" href="#"><?php echo e($user->organization->name ?? 'Sistem Presensi'); ?></a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ route('attendance.index') }}">Absen</a>
+                        <a class="nav-link" href="<?php echo e(route('attendance.index')); ?>">Absen</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link active" href="{{ route('karyawan.dashboard') }}">Dashboard</a>
+                        <a class="nav-link active" href="<?php echo e(route('karyawan.dashboard')); ?>">Dashboard</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ route('karyawan.leaves.index') }}">Pengajuan Izin</a>
+                        <a class="nav-link" href="<?php echo e(route('karyawan.leaves.index')); ?>">Pengajuan Izin</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ route('karyawan.overtime.index') }}">Lembur</a>
+                        <a class="nav-link" href="<?php echo e(route('karyawan.overtime.index')); ?>">Lembur</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ route('shift-change.index') }}">Pergantian Shift</a>
+                        <a class="nav-link" href="<?php echo e(route('shift-change.index')); ?>">Pergantian Shift</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ route('karyawan.profile') }}">Profil</a>
+                        <a class="nav-link" href="<?php echo e(route('karyawan.profile')); ?>">Profil</a>
                     </li>
                     <li class="nav-item">
-                        <form method="POST" action="{{ route('karyawan.logout') }}" class="d-inline">
-                            @csrf
+                        <form method="POST" action="<?php echo e(route('karyawan.logout')); ?>" class="d-inline">
+                            <?php echo csrf_field(); ?>
                             <button type="submit" class="btn btn-link nav-link" style="border: none; background: none; color: white !important;">
                                 Keluar
                             </button>
@@ -112,9 +112,10 @@
         <!-- Welcome Section -->
         <div class="card">
             <div class="card-body">
-                <h4>{{ $greeting }}, {{ $user->name }}!</h4>
+                <h4><?php echo e($greeting); ?>, <?php echo e($user->name); ?>!</h4>
                 <p class="text-muted mb-0">
-                    Surel: {{ $user->email }} | Shift: {{ $user->shift->name ?? 'Tidak ada' }}
+                    Surel: <?php echo e($user->email); ?> | Shift: <?php echo e($user->shift->name ?? 'Tidak ada'); ?>
+
                 </p>
             </div>
         </div>
@@ -125,7 +126,7 @@
                 <div class="card stat-card">
                     <div class="card-body">
                         <h5><i class="fas fa-calendar-check"></i> Absen Bulan Ini</h5>
-                        <h2>{{ $thisMonthAttendance }}</h2>
+                        <h2><?php echo e($thisMonthAttendance); ?></h2>
                     </div>
                 </div>
             </div>
@@ -133,7 +134,7 @@
                 <div class="card stat-card">
                     <div class="card-body">
                         <h5><i class="fas fa-calendar-week"></i> Absen Minggu Ini</h5>
-                        <h2>{{ $thisWeekAttendance }}</h2>
+                        <h2><?php echo e($thisWeekAttendance); ?></h2>
                     </div>
                 </div>
             </div>
@@ -141,7 +142,7 @@
                 <div class="card stat-card" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
                     <div class="card-body">
                         <h5><i class="fas fa-sign-in-alt"></i> Total Check In</h5>
-                        <h2>{{ $totalCheckIn }}</h2>
+                        <h2><?php echo e($totalCheckIn); ?></h2>
                     </div>
                 </div>
             </div>
@@ -149,7 +150,7 @@
                 <div class="card stat-card" style="background: linear-gradient(135deg, #ee0979 0%, #ff6a00 100%);">
                     <div class="card-body">
                         <h5><i class="fas fa-sign-out-alt"></i> Total Check Out</h5>
-                        <h2>{{ $totalCheckOut }}</h2>
+                        <h2><?php echo e($totalCheckOut); ?></h2>
                     </div>
                 </div>
             </div>
@@ -161,7 +162,7 @@
                 <div class="card stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
                     <div class="card-body">
                         <h5><i class="fas fa-clock"></i> Terlambat</h5>
-                        <h2>{{ $totalLate }}</h2>
+                        <h2><?php echo e($totalLate); ?></h2>
                         <small style="opacity: 0.9;">Check in telat dari jadwal</small>
                     </div>
                 </div>
@@ -170,7 +171,7 @@
                 <div class="card stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
                     <div class="card-body">
                         <h5><i class="fas fa-check-circle"></i> Tepat Waktu</h5>
-                        <h2>{{ $totalOnTime }}</h2>
+                        <h2><?php echo e($totalOnTime); ?></h2>
                         <small style="opacity: 0.9;">Check in sesuai jadwal</small>
                     </div>
                 </div>
@@ -179,7 +180,7 @@
                 <div class="card stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
                     <div class="card-body">
                         <h5><i class="fas fa-star"></i> Lebih Awal</h5>
-                        <h2>{{ $totalEarly }}</h2>
+                        <h2><?php echo e($totalEarly); ?></h2>
                         <small style="opacity: 0.9;">Check in lebih awal</small>
                     </div>
                 </div>
@@ -192,59 +193,61 @@
                 <h5 class="mb-0">Status Hari Ini</h5>
             </div>
             <div class="card-body">
-                @if($checkInToday)
+                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($checkInToday): ?>
                     <div class="today-status status-checkin">
-                        <strong>✓ Check In:</strong> {{ $checkInToday->attendance_time->format('d M Y H:i:s') }}
+                        <strong>✓ Check In:</strong> <?php echo e($checkInToday->attendance_time->format('d M Y H:i:s')); ?>
+
                         
-                        @if($todayStatus === 'late')
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($todayStatus === 'late'): ?>
                             <span class="badge bg-danger ms-2">🕐 Terlambat</span>
-                        @elseif($todayStatus === 'on_time')
+                        <?php elseif($todayStatus === 'on_time'): ?>
                             <span class="badge bg-success ms-2">✓ Tepat Waktu</span>
-                        @elseif($todayStatus === 'early')
+                        <?php elseif($todayStatus === 'early'): ?>
                             <span class="badge bg-info ms-2">⭐ Lebih Awal</span>
-                        @endif
+                        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                         
                         <br>
-                        <small>Lokasi: {{ $checkInToday->attendanceLocation->name ?? 'N/A' }}</small>
-                        @if($checkInToday->shift)
+                        <small>Lokasi: <?php echo e($checkInToday->attendanceLocation->name ?? 'N/A'); ?></small>
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($checkInToday->shift): ?>
                             <br>
-                            <small>Shift: {{ $checkInToday->shift->name }} ({{ $checkInToday->shift->start_time }} - {{ $checkInToday->shift->end_time }})</small>
-                        @endif
+                            <small>Shift: <?php echo e($checkInToday->shift->name); ?> (<?php echo e($checkInToday->shift->start_time); ?> - <?php echo e($checkInToday->shift->end_time); ?>)</small>
+                        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                     </div>
-                @else
+                <?php else: ?>
                     <div class="today-status status-pending">
                         <strong>Belum Check In</strong>
                     </div>
-                @endif
+                <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
 
-                @if($checkOutToday)
+                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($checkOutToday): ?>
                     <div class="today-status status-checkout">
-                        <strong>✓ Check Out:</strong> {{ $checkOutToday->attendance_time->format('d M Y H:i:s') }}
+                        <strong>✓ Check Out:</strong> <?php echo e($checkOutToday->attendance_time->format('d M Y H:i:s')); ?>
+
                         
-                        @if($checkOutStatus === 'early')
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($checkOutStatus === 'early'): ?>
                             <span class="badge bg-warning ms-2">🏃 Pulang Lebih Awal</span>
-                        @elseif($checkOutStatus === 'on_time')
+                        <?php elseif($checkOutStatus === 'on_time'): ?>
                             <span class="badge bg-success ms-2">✓ Pulang Tepat Waktu</span>
-                        @elseif($checkOutStatus === 'overtime')
+                        <?php elseif($checkOutStatus === 'overtime'): ?>
                             <span class="badge bg-info ms-2">💼 Lembur</span>
-                        @endif
+                        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                         
                         <br>
-                        <small>Lokasi: {{ $checkOutToday->attendanceLocation->name ?? 'N/A' }}</small>
-                        @if($checkOutToday->shift)
+                        <small>Lokasi: <?php echo e($checkOutToday->attendanceLocation->name ?? 'N/A'); ?></small>
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($checkOutToday->shift): ?>
                             <br>
-                            <small>Shift: {{ $checkOutToday->shift->name }} ({{ $checkOutToday->shift->start_time }} - {{ $checkOutToday->shift->end_time }})</small>
-                        @endif
+                            <small>Shift: <?php echo e($checkOutToday->shift->name); ?> (<?php echo e($checkOutToday->shift->start_time); ?> - <?php echo e($checkOutToday->shift->end_time); ?>)</small>
+                        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                     </div>
-                @else
-                    @if($checkInToday)
+                <?php else: ?>
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($checkInToday): ?>
                         <div class="today-status status-pending">
                             <strong>Belum Check Out</strong>
                         </div>
-                    @endif
-                @endif
+                    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
 
-                <a href="{{ route('attendance.index') }}" class="btn btn-primary mt-3">
+                <a href="<?php echo e(route('attendance.index')); ?>" class="btn btn-primary mt-3">
                     Lakukan Absen
                 </a>
             </div>
@@ -264,7 +267,7 @@
                 </div>
             </div>
             <div class="card-body">
-                @if($recentAttendances->count() > 0)
+                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($recentAttendances->count() > 0): ?>
                     <!-- Filter Section -->
                     <div class="row mb-3">
                         <div class="col-md-4">
@@ -311,8 +314,8 @@
                                 </tr>
                             </thead>
                             <tbody id="attendanceTableBody">
-                                @foreach($recentAttendances as $attendance)
-                                    @php
+                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php $__currentLoopData = $recentAttendances; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $attendance): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <?php
                                         $statusValue = 'none';
                                         if ($attendance->type === 'check_in' && $attendance->shift) {
                                             $checkInTime = $attendance->attendance_time;
@@ -346,19 +349,19 @@
                                                 $statusValue = 'overtime';
                                             }
                                         }
-                                    @endphp
-                                    <tr data-type="{{ $attendance->type }}" data-status="{{ $statusValue }}">
-                                        <td>{{ $attendance->attendance_time->format('d M Y H:i:s') }}</td>
+                                    ?>
+                                    <tr data-type="<?php echo e($attendance->type); ?>" data-status="<?php echo e($statusValue); ?>">
+                                        <td><?php echo e($attendance->attendance_time->format('d M Y H:i:s')); ?></td>
                                         <td>
-                                            @if($attendance->type === 'check_in')
+                                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($attendance->type === 'check_in'): ?>
                                                 <span class="badge bg-success">Check In</span>
-                                            @else
+                                            <?php else: ?>
                                                 <span class="badge bg-warning">Check Out</span>
-                                            @endif
+                                            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                                         </td>
                                         <td>
-                                            @if($attendance->type === 'check_in' && $attendance->shift)
-                                                @php
+                                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($attendance->type === 'check_in' && $attendance->shift): ?>
+                                                <?php
                                                     $checkInTime = $attendance->attendance_time;
                                                     $shiftStart = \Carbon\Carbon::parse($attendance->shift->start_time);
                                                     $shiftStart->setDate($checkInTime->year, $checkInTime->month, $checkInTime->day);
@@ -378,10 +381,10 @@
                                                         $badgeClass = 'bg-info';
                                                         $icon = '⭐';
                                                     }
-                                                @endphp
-                                                <span class="badge {{ $badgeClass }}">{{ $icon }} {{ $label }}</span>
-                                            @elseif($attendance->type === 'check_out' && $attendance->shift)
-                                                @php
+                                                ?>
+                                                <span class="badge <?php echo e($badgeClass); ?>"><?php echo e($icon); ?> <?php echo e($label); ?></span>
+                                            <?php elseif($attendance->type === 'check_out' && $attendance->shift): ?>
+                                                <?php
                                                     $checkOutTime = $attendance->attendance_time;
                                                     $shiftEnd = \Carbon\Carbon::parse($attendance->shift->end_time);
                                                     $shiftEnd->setDate($checkOutTime->year, $checkOutTime->month, $checkOutTime->day);
@@ -406,30 +409,30 @@
                                                         $badgeClass = 'bg-info';
                                                         $icon = '💼';
                                                     }
-                                                @endphp
-                                                <span class="badge {{ $badgeClass }}">{{ $icon }} {{ $label }}</span>
-                                            @else
+                                                ?>
+                                                <span class="badge <?php echo e($badgeClass); ?>"><?php echo e($icon); ?> <?php echo e($label); ?></span>
+                                            <?php else: ?>
                                                 <span class="text-muted">-</span>
-                                            @endif
+                                            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                                         </td>
-                                        <td>{{ $attendance->attendanceLocation->name ?? 'N/A' }}</td>
+                                        <td><?php echo e($attendance->attendanceLocation->name ?? 'N/A'); ?></td>
                                         <td>
-                                            @if($attendance->photo)
-                                                <a href="{{ asset('storage/' . $attendance->photo) }}" target="_blank" class="btn btn-sm btn-info">
+                                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($attendance->photo): ?>
+                                                <a href="<?php echo e(asset('storage/' . $attendance->photo)); ?>" target="_blank" class="btn btn-sm btn-info">
                                                     Lihat Foto
                                                 </a>
-                                            @else
+                                            <?php else: ?>
                                                 <span class="text-muted">-</span>
-                                            @endif
+                                            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                                         </td>
                                     </tr>
-                                @endforeach
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                             </tbody>
                         </table>
                     </div>
-                @else
+                <?php else: ?>
                     <p class="text-muted text-center">Belum ada riwayat absen.</p>
-                @endif
+                <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
             </div>
         </div>
     </div>
@@ -553,10 +556,10 @@
             const type = button.getAttribute('data-type');
             
             if (type === 'excel') {
-                exportForm.action = '{{ route("karyawan.export.excel") }}';
+                exportForm.action = '<?php echo e(route("karyawan.export.excel")); ?>';
                 exportModal.querySelector('.modal-title').textContent = 'Export Excel - Riwayat Absensi';
             } else {
-                exportForm.action = '{{ route("karyawan.export.pdf") }}';
+                exportForm.action = '<?php echo e(route("karyawan.export.pdf")); ?>';
                 exportModal.querySelector('.modal-title').textContent = 'Export PDF - Riwayat Absensi';
             }
         });
@@ -564,3 +567,4 @@
 </body>
 </html>
 
+<?php /**PATH /Users/mac/Documents/code/web/presensi/resources/views/karyawan/dashboard.blade.php ENDPATH**/ ?>
