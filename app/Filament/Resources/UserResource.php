@@ -135,8 +135,24 @@ class UserResource extends Resource
                     ->afterStateUpdated(function ($state, callable $set) {
                         if ($state === 'admin') {
                             $set('shift_id', null);
+                            $set('work_type', null);
                         }
                     }),
+                
+                Forms\Components\Select::make('work_type')
+                    ->label('Jenis Kerja')
+                    ->options([
+                        'shift' => '🕒 Shift - Absen berdasarkan jadwal shift',
+                        'working_hours' => '⏰ Working Hours - Absen fleksibel dengan jam kerja minimum',
+                    ])
+                    ->default('shift')
+                    ->required()
+                    ->native(false)
+                    ->live()
+                    ->visible(fn ($get) => !$isSuperAdmin && $get('role') === 'karyawan')
+                    ->helperText(fn ($get) => $get('work_type') === 'working_hours' 
+                        ? '💡 Karyawan bisa check-in kapan saja, checkout setelah jam minimum'
+                        : '💡 Karyawan harus absen sesuai jadwal shift'),
                 
                 Forms\Components\Select::make('shift_id')
                     ->label('Shift')
@@ -147,8 +163,9 @@ class UserResource extends Resource
                     )
                     ->searchable()
                     ->preload()
-                    ->visible(fn ($get) => !$isSuperAdmin && $get('role') === 'karyawan')
-                    ->required(fn ($get) => !$isSuperAdmin && $get('role') === 'karyawan'),
+                    ->visible(fn ($get) => !$isSuperAdmin && $get('role') === 'karyawan' && $get('work_type') === 'shift')
+                    ->required(fn ($get) => !$isSuperAdmin && $get('role') === 'karyawan' && $get('work_type') === 'shift')
+                    ->helperText('Pilih shift untuk karyawan ini'),
             ]);
     }
 
@@ -213,6 +230,25 @@ class UserResource extends Resource
                         'karyawan' => 'Karyawan',
                         default => $state,
                     })
+                    ->sortable()
+                    ->visible(!$isSuperAdmin),
+                
+                Tables\Columns\BadgeColumn::make('work_type')
+                    ->label('Jenis Kerja')
+                    ->colors([
+                        'primary' => 'shift',
+                        'success' => 'working_hours',
+                    ])
+                    ->icons([
+                        'heroicon-o-clock' => 'shift',
+                        'heroicon-o-calendar-days' => 'working_hours',
+                    ])
+                    ->formatStateUsing(fn (?string $state): string => match ($state) {
+                        'shift' => 'Shift',
+                        'working_hours' => 'Working Hours',
+                        default => '-',
+                    })
+                    ->placeholder('-')
                     ->sortable()
                     ->visible(!$isSuperAdmin),
                 

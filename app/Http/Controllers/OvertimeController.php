@@ -22,7 +22,10 @@ class OvertimeController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
-        return view('karyawan.overtime.index', compact('overtimes'));
+        // Get auto-fill data from session (dari check-out overtime detection)
+        $autoFillData = session('overtime_auto_fill');
+
+        return view('karyawan.overtime.index', compact('overtimes', 'autoFillData'));
     }
 
     public function store(Request $request)
@@ -61,6 +64,9 @@ class OvertimeController extends Controller
             'reason' => $request->reason,
             'status' => 'pending',
         ]);
+
+        // Clear auto-fill session data after successful submission
+        session()->forget('overtime_auto_fill');
 
         return back()->with('success', 'Pengajuan lembur berhasil dibuat. Menunggu persetujuan admin.');
     }

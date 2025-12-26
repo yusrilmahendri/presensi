@@ -962,6 +962,29 @@
                 const data = await response.json();
 
                 if (data.success) {
+                    // Check if overtime detected
+                    if (data.overtime_detected && data.redirect_url) {
+                        await Swal.fire({
+                            icon: 'warning',
+                            title: '⏰ Overtime Terdeteksi!',
+                            html: `
+                                <div style="text-align: center; padding: 10px;">
+                                    <p style="font-size: 1.1em; margin-bottom: 20px;">${data.message}</p>
+                                    <div style="background: #fff3cd; padding: 15px; border-radius: 10px; border-left: 4px solid #ffc107;">
+                                        <p style="margin: 0; color: #856404;">
+                                            <strong>Anda akan diarahkan ke halaman pengajuan lembur.</strong><br>
+                                            Silakan isi alasan lembur Anda.
+                                        </p>
+                                    </div>
+                                </div>
+                            `,
+                            confirmButtonText: 'Lanjutkan',
+                            confirmButtonColor: '#667eea'
+                        });
+                        window.location.href = data.redirect_url;
+                        return;
+                    }
+
                     await Swal.fire({
                         icon: 'success',
                         title: 'Berhasil!',
@@ -1018,6 +1041,147 @@
                 checkFormReady();
             }
         });
+
+        // Function to show overtime modal
+        async function showOvertimeModal(overtimeData) {
+            const { value: reason } = await Swal.fire({
+                title: '⏰ Pengajuan Lembur',
+                html: `
+                    <div style="text-align: left; padding: 10px;">
+                        <div style="background: #fff3cd; padding: 15px; border-radius: 10px; margin-bottom: 20px; border-left: 4px solid #ffc107;">
+                            <h6 style="color: #856404; margin-bottom: 10px;">📊 Detail Jam Kerja:</h6>
+                            ${overtimeData.hours_worked ? `
+                                <div style="margin-bottom: 8px;">
+                                    <strong>Total Jam Kerja:</strong> ${overtimeData.hours_worked} jam<br>
+                                    <strong>Batas Maksimal:</strong> ${overtimeData.max_hours} jam
+                                </div>
+                            ` : ''}
+                            ${overtimeData.shift_end ? `
+                                <div style="margin-bottom: 8px;">
+                                    <strong>Shift Berakhir:</strong> ${overtimeData.shift_end}<br>
+                                    <strong>Waktu Check-Out:</strong> ${overtimeData.check_out_time}
+                                </div>
+                            ` : ''}
+                            <div style="color: #d9534f; font-weight: bold; margin-top: 10px;">
+                                ⚠️ Overtime: ${overtimeData.overtime_hours} jam (${overtimeData.overtime_minutes} menit)
+                            </div>
+                        </div>
+                        <label for="overtime-reason" style="font-weight: bold; margin-bottom: 8px; display: block;">
+                            Alasan Lembur: <span style="color: red;">*</span>
+                        </label>
+                        <textarea 
+                            id="overtime-reason" 
+                            class="swal2-input" 
+                            placeholder="Tuliskan alasan lembur Anda (minimal 10 karakter)" 
+                            rows="4" 
+                            style="width: 100%; padding: 10px; font-size: 14px; border: 1px solid #ddd; border-radius: 5px; resize: vertical; min-height: 100px;"
+                        ></textarea>
+                    </div>
+                `,
+                focusConfirm: false,
+                showCancelButton: true,
+                confirmButtonText: 'Submit Lembur',
+                cancelButtonText: 'Batal',
+                confirmButtonColor: '#667eea',
+                cancelButtonColor: '#dc3545',
+                preConfirm: () => {
+                    const reason = document.getElementById('overtime-reason').value;
+                    if (!reason || reason.trim().length < 10) {
+                        Swal.showValidationMessage('Alasan lembur minimal 10 karakter');
+                        return false;
+                    }
+                    return reason;
+                }
+            });
+
+            if (reason) {
+                await submitOvertimeRequest(overtimeData.attendance_id, reason);
+            } else {
+                // User cancelled, just redirect to dashboard
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Lembur Dibatalkan',
+                    text: 'Anda membatalkan pengajuan lembur. Check-out tidak dilanjutkan.',
+                    confirmButtonColor: '#667eea'
+                }).then(() => {
+                    window.location.href = '{{ route("karyawan.dashboard") }}';
+                });
+            }
+        }
+
+        // Function to submit overtime request
+        async function submitOvertimeRequest(attendanceId, reason) {
+            try {
+                const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                const formData = {
+                    attendance_id: attendanceId,
+                    reason: reason,
+                    latitude: currentLocation.latitude,
+                    longitude: currentLocation.longitude,
+                    photo: capturedPhoto
+                };
+
+                const response = await fetch('{{ route("attendance.submit-overtime") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    await Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil!',
+                        html: `
+                            <div style="text-align: center; padding: 10px;">
+                                <h5 style="color: #28a745; margin-bottom: 15px;">${data.message}</h5>
+                                <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; margin: 15px 0;">
+                                    <div style="margin-bottom: 10px;">
+                                        <strong style="color: #667eea;">⏰ Waktu Check-Out:</strong>
+                                        <div style="font-size: 1.2em; color: #333; margin-top: 5px;">${data.data.attendance_time}</div>
+                                    </div>
+                                    <div style="margin-bottom: 10px;">
+                                        <strong style="color: #667eea;">📍 Lokasi:</strong>
+                                        <div style="font-size: 1.1em; color: #333; margin-top: 5px;">${data.data.location}</div>
+                                    </div>
+                                    <div>
+                                        <strong style="color: #667eea;">⏳ Durasi Lembur:</strong>
+                                        <div style="font-size: 1.1em; color: #333; margin-top: 5px;">${data.data.overtime_duration} menit</div>
+                                    </div>
+                                    <div style="margin-top: 10px; padding: 10px; background: #fff3cd; border-radius: 5px;">
+                                        <small style="color: #856404;">Status: <strong>Menunggu Persetujuan</strong></small>
+                                    </div>
+                                </div>
+                            </div>
+                        `,
+                        confirmButtonText: 'OK',
+                        confirmButtonColor: '#667eea'
+                    });
+
+                    setTimeout(() => {
+                        window.location.href = '{{ route("karyawan.dashboard") }}';
+                    }, 2000);
+                } else {
+                    await Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal!',
+                        text: data.message || 'Terjadi kesalahan saat menyimpan lembur.'
+                    });
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'Error!',
+                    text: 'Terjadi kesalahan saat mengirim data lembur.'
+                });
+            }
+        }
 
         // Initialize on page load
         window.addEventListener('DOMContentLoaded', function() {

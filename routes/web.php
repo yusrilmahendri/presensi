@@ -55,5 +55,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/presensi', [AttendanceController::class, 'index'])->name('attendance.index');
     Route::post('/presensi', [AttendanceController::class, 'store'])->name('attendance.store');
     Route::post('/attendance/log-fake-gps', [AttendanceController::class, 'logFakeGps'])->name('attendance.log-fake-gps');
+    Route::post('/attendance/submit-overtime', [AttendanceController::class, 'submitOvertime'])->name('attendance.submit-overtime');
 });
 

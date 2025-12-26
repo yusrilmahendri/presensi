@@ -57,7 +57,14 @@ class QuickCheckInOut extends Widget
             
             // Determine attendance status
             $status = null;
-            if ($user->shift) {
+            $organization = $user->organization;
+            
+            // Mode Working Hours: Karyawan bebas check-in kapan saja
+            if ($organization && $organization->isWorkingHoursBased()) {
+                $status = 'flexible';
+            }
+            // Mode Shift: Validasi berdasarkan jam shift
+            elseif ($user->shift) {
                 $currentTime = Carbon::now('Asia/Jakarta');
                 $shiftStart = Carbon::parse($user->shift->start_time);
                 $shiftStart->setDate($currentTime->year, $currentTime->month, $currentTime->day);
@@ -142,6 +149,28 @@ class QuickCheckInOut extends Widget
             if (!$checkIn) {
                 $this->dispatch('check-out-error', message: 'Anda belum melakukan check-in hari ini!');
                 return;
+            }
+
+            // Mode Working Hours: Validasi jam kerja minimum
+            $organization = $user->organization;
+            if ($organization && $organization->isWorkingHoursBased()) {
+                $checkInTime = Carbon::parse($checkIn->attendance_time);
+                $currentTime = Carbon::now('Asia/Jakarta');
+                $hoursWorked = $checkInTime->diffInHours($currentTime, true);
+                $minHours = $organization->min_working_hours;
+
+                if ($hoursWorked < $minHours) {
+                    $remainingHours = $minHours - $hoursWorked;
+                    $remainingMinutes = round(($remainingHours - floor($remainingHours)) * 60);
+                    
+                    $message = "⏰ Belum mencapai jam kerja minimum!\n\n" .
+                              "📋 Jam kerja minimum: {$minHours} jam\n" .
+                              "⏱️ Anda telah bekerja: " . floor($hoursWorked) . " jam " . round(($hoursWorked - floor($hoursWorked)) * 60) . " menit\n" .
+                              "⚠️ Kurang: " . floor($remainingHours) . " jam " . $remainingMinutes . " menit lagi";
+                    
+                    $this->dispatch('check-out-error', message: $message);
+                    return;
+                }
             }
             
             // Get default location

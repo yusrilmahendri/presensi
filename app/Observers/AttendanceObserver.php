@@ -30,7 +30,8 @@ class AttendanceObserver
      */
     private function checkLateCheckIn(Attendance $attendance): void
     {
-        if (!$attendance->user->shift) {
+        // Hanya cek keterlambatan untuk karyawan dengan work_type shift
+        if ($attendance->user->work_type !== 'shift' || !$attendance->user->shift) {
             return;
         }
 
@@ -53,10 +54,6 @@ class AttendanceObserver
      */
     private function detectOvertime(Attendance $attendance): void
     {
-        if (!$attendance->user->shift) {
-            return;
-        }
-
         // Find corresponding check-in
         $checkIn = Attendance::where('user_id', $attendance->user_id)
             ->where('type', 'check_in')
@@ -68,28 +65,9 @@ class AttendanceObserver
             return;
         }
 
-        $shiftEnd = Carbon::parse($checkIn->attendance_time->toDateString() . ' ' . $attendance->user->shift->end_time);
-        $actualEnd = Carbon::parse($attendance->attendance_time);
-        
-        // If checked out after shift end time
-        if ($actualEnd->gt($shiftEnd)) {
-            $overtimeMinutes = $actualEnd->diffInMinutes($shiftEnd);
-            
-            // Minimum 30 minutes to count as overtime
-            if ($overtimeMinutes >= 30) {
-                Overtime::create([
-                    'user_id' => $attendance->user_id,
-                    'organization_id' => $attendance->user->organization_id,
-                    'attendance_id' => $attendance->id,
-                    'date' => $attendance->attendance_time->toDateString(),
-                    'start_time' => $shiftEnd->format('H:i:s'),
-                    'end_time' => $actualEnd->format('H:i:s'),
-                    'duration_minutes' => $overtimeMinutes,
-                    'multiplier' => $this->getOvertimeMultiplier($actualEnd),
-                    'status' => 'pending',
-                ]);
-            }
-        }
+        // Skip auto-creation - overtime will be created manually via submitOvertime()
+        // when user provides a reason after exceeding work hours
+        return;
     }
 
     /**

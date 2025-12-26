@@ -27,6 +27,8 @@ class OrganizationResource extends Resource
 
     public static function shouldRegisterNavigation(): bool
     {
+        // Super Admin bisa lihat semua organisasi
+        // Admin biasa bisa edit organisasi mereka sendiri (tapi menu tidak muncul di sidebar)
         return auth()->check() && auth()->user()->isSuperAdmin();
     }
 
@@ -81,6 +83,71 @@ class OrganizationResource extends Resource
                     ->numeric()
                     ->minValue(1)
                     ->default(50),
+                
+                Forms\Components\Section::make('Pengaturan Mode Absensi')
+                    ->description('Aktifkan mode absensi untuk bisnis ini. Anda bisa mengaktifkan shift, jam kerja, atau keduanya.')
+                    ->schema([
+                        Forms\Components\CheckboxList::make('enabled_attendance_modes')
+                            ->label('Mode Absensi yang Diaktifkan')
+                            ->options([
+                                'shift' => '🕒 Mode Shift - Absensi berdasarkan jadwal shift',
+                                'working_hours' => '⏰ Mode Jam Kerja - Waktu fleksibel dengan minimum jam kerja',
+                            ])
+                            ->descriptions([
+                                'shift' => 'Cocok untuk pabrik, retail, kantor formal. Admin akan bisa kelola shift.',
+                                'working_hours' => 'Cocok untuk remote work, startup, creative. Admin akan setting jam kerja minimum.',
+                            ])
+                            ->default(['shift'])
+                            ->required()
+                            ->minItems(1)
+                            ->live()
+                            ->helperText('💡 Anda bisa mengaktifkan kedua mode sekaligus'),
+                        
+                        Forms\Components\Grid::make(2)
+                            ->schema([
+                                Forms\Components\TextInput::make('min_working_hours')
+                                    ->label('Jam Kerja Minimum')
+                                    ->numeric()
+                                    ->default(8)
+                                    ->minValue(1)
+                                    ->maxValue(12)
+                                    ->suffix('jam/hari')
+                                    ->helperText('⚠️ Hanya Admin yang bisa mengubah nilai ini')
+                                    ->disabled()
+                                    ->dehydrated(true),
+                                
+                                Forms\Components\TextInput::make('grace_period_hours')
+                                    ->label('Grace Period (Toleransi)')
+                                    ->numeric()
+                                    ->default(2)
+                                    ->minValue(0)
+                                    ->maxValue(4)
+                                    ->suffix('jam')
+                                    ->helperText('⚠️ Hanya Admin yang bisa mengubah nilai ini')
+                                    ->disabled()
+                                    ->dehydrated(true),
+                            ])
+                            ->visible(function ($get) {
+                                $modes = $get('enabled_attendance_modes') ?? ['shift'];
+                                return in_array('working_hours', $modes);
+                            }),
+                        
+                        Forms\Components\Placeholder::make('admin_config_info')
+                            ->label('ℹ️ Informasi Penting')
+                            ->content('**Super Admin hanya mengaktifkan fitur mode absensi.**
+
+Admin bisnis yang akan mengatur:
+• Jam Kerja Minimum
+• Grace Period
+
+Admin bisa mengubah konfigurasi tersebut di menu **Pengaturan → Pengaturan Organisasi** setelah login.')
+                            ->visible(function ($get) {
+                                $modes = $get('enabled_attendance_modes') ?? ['shift'];
+                                return in_array('working_hours', $modes);
+                            }),
+                    ])
+                    ->collapsible()
+                    ->columnSpanFull(),
             ]);
     }
 
@@ -129,6 +196,23 @@ class OrganizationResource extends Resource
                     ->badge()
                     ->color('info')
                     ->sortable(),
+                Tables\Columns\TextColumn::make('enabled_attendance_modes')
+                    ->label('Mode Absensi')
+                    ->badge()
+                    ->formatStateUsing(function ($state) {
+                        $modes = is_array($state) ? $state : json_decode($state, true) ?? [];
+                        $labels = [];
+                        if (in_array('shift', $modes)) {
+                            $labels[] = 'Shift';
+                        }
+                        if (in_array('working_hours', $modes)) {
+                            $labels[] = 'Jam Kerja';
+                        }
+                        return $labels;
+                    })
+                    ->color(fn ($state) => 'info')
+                    ->separator(',')
+                    ->sortable(),
                 Tables\Columns\IconColumn::make('is_active')
                     ->label('Status')
                     ->boolean()
@@ -156,6 +240,21 @@ class OrganizationResource extends Resource
                         'perusahaan' => 'Perusahaan',
                         'lainnya' => 'Lainnya',
                     ]),
+                Tables\Filters\SelectFilter::make('enabled_attendance_modes')
+                    ->label('Mode Absensi')
+                    ->options([
+                        'shift' => '🕒 Shift',
+                        'working_hours' => '⏰ Jam Kerja',
+                    ])
+                    ->query(function (Builder $query, array $data) {
+                        if (!isset($data['value']) || $data['value'] === null) {
+                            return $query;
+                        }
+                        
+                        return $query->where(function ($query) use ($data) {
+                            $query->whereJsonContains('enabled_attendance_modes', $data['value']);
+                        });
+                    }),
                 Tables\Filters\TernaryFilter::make('is_active')
                     ->label('Status')
                     ->placeholder('Semua')

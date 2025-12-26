@@ -24,8 +24,17 @@ class ShiftResource extends Resource
 
     public static function shouldRegisterNavigation(): bool
     {
-        $user = auth()->user();
-        return $user && $user->isAdmin() && !$user->isSuperAdmin();
+        // Super Admin selalu bisa lihat
+        if (auth()->check() && auth()->user()->isSuperAdmin()) {
+            return true;
+        }
+        
+        // Admin hanya bisa lihat jika shift mode aktif
+        if (auth()->check() && auth()->user()->organization) {
+            return auth()->user()->organization->isShiftBased();
+        }
+        
+        return false;
     }
 
     public static function form(Form $form): Form

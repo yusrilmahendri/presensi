@@ -263,13 +263,24 @@
                     <h5 class="modal-title"><i class="fas fa-clock me-2"></i>Ajukan Lembur Baru</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                <form action="{{ route('karyawan.overtime.store') }}" method="POST">
+                <form action="{{ route('karyawan.overtime.store') }}" method="POST" id="overtimeForm">
                     @csrf
                     <div class="modal-body">
+                        @if(isset($autoFillData))
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <strong>Overtime Terdeteksi!</strong><br>
+                                <small>Data tanggal dan jam telah diisi otomatis berdasarkan absensi Anda. Silakan isi alasan lembur.</small>
+                            </div>
+                        @endif
+
                         <div class="mb-3">
                             <label for="date" class="form-label">Tanggal Lembur <span class="text-danger">*</span></label>
                             <input type="date" class="form-control @error('date') is-invalid @enderror" 
-                                   id="date" name="date" value="{{ old('date') }}" required>
+                                   id="date" name="date" 
+                                   value="{{ $autoFillData['date'] ?? old('date') }}" 
+                                   {{ isset($autoFillData) ? 'readonly' : '' }} 
+                                   required>
                             @error('date')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -279,7 +290,10 @@
                             <div class="col-md-6 mb-3">
                                 <label for="start_time" class="form-label">Jam Mulai <span class="text-danger">*</span></label>
                                 <input type="time" class="form-control @error('start_time') is-invalid @enderror" 
-                                       id="start_time" name="start_time" value="{{ old('start_time') }}" required>
+                                       id="start_time" name="start_time" 
+                                       value="{{ $autoFillData['start_time'] ?? old('start_time') }}" 
+                                       {{ isset($autoFillData) ? 'readonly' : '' }} 
+                                       required>
                                 @error('start_time')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -288,7 +302,10 @@
                             <div class="col-md-6 mb-3">
                                 <label for="end_time" class="form-label">Jam Selesai <span class="text-danger">*</span></label>
                                 <input type="time" class="form-control @error('end_time') is-invalid @enderror" 
-                                       id="end_time" name="end_time" value="{{ old('end_time') }}" required>
+                                       id="end_time" name="end_time" 
+                                       value="{{ $autoFillData['end_time'] ?? old('end_time') }}" 
+                                       {{ isset($autoFillData) ? 'readonly' : '' }} 
+                                       required>
                                 @error('end_time')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -332,11 +349,27 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
     <script>
-        // Auto-open modal if there are validation errors
-        @if($errors->any())
+        // Auto-open modal if there are validation errors OR auto-fill data from overtime detection
+        @if($errors->any() || isset($autoFillData))
             var modal = new bootstrap.Modal(document.getElementById('createOvertimeModal'));
             modal.show();
+            
+            @if(isset($autoFillData))
+                // Focus on reason field since other fields are readonly
+                setTimeout(function() {
+                    document.getElementById('reason').focus();
+                }, 500);
+            @endif
         @endif
+
+        // Add readonly styling for auto-filled fields
+        document.addEventListener('DOMContentLoaded', function() {
+            const readonlyFields = document.querySelectorAll('input[readonly]');
+            readonlyFields.forEach(field => {
+                field.style.backgroundColor = '#e9ecef';
+                field.style.cursor = 'not-allowed';
+            });
+        });
     </script>
 
     <footer>

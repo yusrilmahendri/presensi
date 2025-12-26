@@ -19,11 +19,17 @@ class Organization extends Model
         'logo',
         'is_active',
         'max_users',
+        'enabled_attendance_modes',
+        'min_working_hours',
+        'grace_period_hours',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
         'max_users' => 'integer',
+        'enabled_attendance_modes' => 'array',
+        'min_working_hours' => 'integer',
+        'grace_period_hours' => 'integer',
     ];
 
     /**
@@ -110,5 +116,39 @@ class Organization extends Model
             'lainnya' => 'Lainnya',
             default => $this->type,
         };
+    }
+
+    /**
+     * Check if organization has shift mode enabled.
+     */
+    public function isShiftBased(): bool
+    {
+        $modes = $this->enabled_attendance_modes ?? ['shift'];
+        return in_array('shift', $modes);
+    }
+
+    /**
+     * Check if organization has working hours mode enabled.
+     */
+    public function isWorkingHoursBased(): bool
+    {
+        $modes = $this->enabled_attendance_modes ?? ['shift'];
+        return in_array('working_hours', $modes);
+    }
+
+    /**
+     * Get enabled attendance modes.
+     */
+    public function getEnabledModes(): array
+    {
+        return $this->enabled_attendance_modes ?? ['shift'];
+    }
+
+    /**
+     * Get maximum work hours before overtime (minimum + grace period).
+     */
+    public function getMaxWorkHoursBeforeOvertime(): int
+    {
+        return $this->min_working_hours + $this->grace_period_hours;
     }
 }
