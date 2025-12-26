@@ -232,23 +232,28 @@ class OrganizationSettings extends Page
                                 return $org && $org->isWorkingHoursBased();
                             }),
                         
-                        Forms\Components\Placeholder::make('working_hours_preview')
-                            ->label('Preview Konfigurasi')
-                            ->content(function ($get) {
+                        Forms\Components\View::make('filament.components.working-hours-preview')
+                            ->viewData(function ($get) {
                                 $minHours = (int) ($get('min_working_hours') ?? 8);
                                 $gracePeriod = (int) ($get('grace_period_hours') ?? 2);
                                 $maxHours = $minHours + $gracePeriod;
                                 
-                                return "**Konfigurasi Aktif:**\n" .
-                                       "• Jam kerja minimum: **{$minHours} jam**\n" .
-                                       "• Grace period: **{$gracePeriod} jam**\n" .
-                                       "• Maksimal sebelum lembur: **{$maxHours} jam**\n\n" .
-                                       "**Contoh Kasus:**\n" .
-                                       "Karyawan check-in jam 08:00\n\n" .
-                                       "• Checkout jam 14:00 (6 jam) → ❌ Ditolak! Kurang " . ($minHours - 6) . " jam\n" .
-                                       "• Checkout jam 16:30 ({$minHours}.5 jam) → ✅ Boleh checkout\n" .
-                                       "• Checkout jam 18:00 ({$maxHours} jam) → ✅ Boleh checkout (belum lembur)\n" .
-                                       "• Checkout jam 19:00 (" . ($maxHours + 1) . " jam) → ✅ Checkout + 1 jam lembur otomatis";
+                                $checkInTime = "08:00";
+                                $rejectTime = "14:00";
+                                $allowTime1 = sprintf("%02d:00", 8 + $minHours);
+                                $allowTime2 = sprintf("%02d:00", 8 + $maxHours);
+                                $overtimeTime = sprintf("%02d:00", 8 + $maxHours + 1);
+                                
+                                return [
+                                    'minHours' => $minHours,
+                                    'gracePeriod' => $gracePeriod,
+                                    'maxHours' => $maxHours,
+                                    'checkInTime' => $checkInTime,
+                                    'rejectTime' => $rejectTime,
+                                    'allowTime1' => $allowTime1,
+                                    'allowTime2' => $allowTime2,
+                                    'overtimeTime' => $overtimeTime,
+                                ];
                             })
                             ->visible(function ($get) {
                                 // Hanya Admin yang lihat preview (Super Admin tidak perlu)

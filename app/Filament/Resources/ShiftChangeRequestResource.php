@@ -234,12 +234,21 @@ class ShiftChangeRequestResource extends Resource
                         ->icon('heroicon-o-check-circle')
                         ->color('success')
                         ->requiresConfirmation()
+                        ->modalHeading('Setujui Pergantian Shift')
+                        ->modalDescription('Shift karyawan akan otomatis berubah sesuai tanggal efektif.')
+                        ->form([
+                            Forms\Components\Textarea::make('approval_notes')
+                                ->label('Catatan (Opsional)')
+                                ->placeholder('Tambahkan catatan persetujuan jika diperlukan...')
+                                ->rows(2),
+                        ])
                         ->visible(fn ($record) => $record->status === 'pending' && auth()->user()->role === 'admin')
-                        ->action(function ($record) {
+                        ->action(function ($record, array $data) {
                             $record->update([
                                 'status' => 'approved',
                                 'approved_by' => auth()->id(),
                                 'approved_at' => now('Asia/Jakarta'),
+                                'notes' => $data['approval_notes'] ?? null,
                             ]);
                             
                             // Update user's shift
@@ -247,8 +256,16 @@ class ShiftChangeRequestResource extends Resource
                                 'shift_id' => $record->requested_shift_id,
                             ]);
                             
+                            // Send email notification to employee
+                            $record->user->notify(new \App\Notifications\ShiftChangeStatusNotification(
+                                $record,
+                                'approved',
+                                $data['approval_notes'] ?? null
+                            ));
+                            
                             \Filament\Notifications\Notification::make()
                                 ->title('Pergantian shift disetujui')
+                                ->body('Email notifikasi telah dikirim ke ' . $record->user->name)
                                 ->success()
                                 ->send();
                         }),
@@ -258,10 +275,13 @@ class ShiftChangeRequestResource extends Resource
                         ->icon('heroicon-o-x-circle')
                         ->color('danger')
                         ->requiresConfirmation()
+                        ->modalHeading('Tolak Pergantian Shift')
+                        ->modalDescription('Berikan alasan penolakan yang jelas kepada karyawan.')
                         ->visible(fn ($record) => $record->status === 'pending' && auth()->user()->role === 'admin')
                         ->form([
-                            Forms\Components\Textarea::make('notes')
+                            Forms\Components\Textarea::make('rejection_notes')
                                 ->label('Alasan Penolakan')
+                                ->placeholder('Jelaskan mengapa pergantian shift ditolak...')
                                 ->required()
                                 ->rows(3),
                         ])
@@ -270,11 +290,19 @@ class ShiftChangeRequestResource extends Resource
                                 'status' => 'rejected',
                                 'approved_by' => auth()->id(),
                                 'approved_at' => now('Asia/Jakarta'),
-                                'notes' => $data['notes'],
+                                'notes' => $data['rejection_notes'],
                             ]);
+                            
+                            // Send email notification to employee
+                            $record->user->notify(new \App\Notifications\ShiftChangeStatusNotification(
+                                $record,
+                                'rejected',
+                                $data['rejection_notes']
+                            ));
                             
                             \Filament\Notifications\Notification::make()
                                 ->title('Pergantian shift ditolak')
+                                ->body('Email notifikasi telah dikirim ke ' . $record->user->name)
                                 ->warning()
                                 ->send();
                         }),

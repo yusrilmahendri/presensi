@@ -47,7 +47,10 @@ class SendCheckOutReminder extends Command
             $shiftEnd = Carbon::parse($employee->shift->end_time);
             $reminderTime = $shiftEnd->copy()->subMinutes(30);
             
-            // Only send if current time is within 5 minutes of reminder time
+            // Calculate minutes remaining until shift ends
+            $minutesRemaining = (int) $currentTime->diffInMinutes($shiftEnd, false);
+            
+            // Only send if current time is within 5 minutes of reminder time (30 minutes before end)
             if ($currentTime->between($reminderTime->copy()->subMinutes(2), $reminderTime->copy()->addMinutes(3))) {
                 // Check if checked in today
                 $hasCheckedIn = Attendance::where('user_id', $employee->id)
@@ -71,10 +74,13 @@ class SendCheckOutReminder extends Command
                 
                 // Send reminder
                 try {
-                    $employee->notify(new CheckOutReminderNotification($employee->shift->end_time));
+                    $employee->notify(new CheckOutReminderNotification(
+                        $employee->shift->end_time,
+                        $minutesRemaining
+                    ));
                     
                     $remindersSent++;
-                    $this->line("✓ Reminder sent to {$employee->name}");
+                    $this->line("✓ Reminder sent to {$employee->name} ({$minutesRemaining} minutes remaining)");
                 } catch (\Exception $e) {
                     $this->error("✗ Failed to send reminder to {$employee->name}: {$e->getMessage()}");
                 }
