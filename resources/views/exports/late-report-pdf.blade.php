@@ -108,11 +108,33 @@
         </div>
         <div style="display: table-cell; text-align: center; padding: 10px;">
             <div class="label">Rata-rata Terlambat</div>
-            <div class="value">{{ count($reportData) > 0 ? round(array_sum(array_column($reportData, 'late_minutes')) / count($reportData)) : 0 }} menit</div>
+            <div class="value">
+                @php
+                    $avgMinutes = count($reportData) > 0 ? round(array_sum(array_column($reportData, 'late_minutes')) / count($reportData)) : 0;
+                    $hours = floor($avgMinutes / 60);
+                    $mins = $avgMinutes % 60;
+                @endphp
+                @if($hours > 0)
+                    {{ $hours }} jam {{ $mins }} menit
+                @else
+                    {{ $mins }} menit
+                @endif
+            </div>
         </div>
         <div style="display: table-cell; text-align: center; padding: 10px;">
             <div class="label">Terlambat Terlama</div>
-            <div class="value">{{ count($reportData) > 0 ? max(array_column($reportData, 'late_minutes')) : 0 }} menit</div>
+            <div class="value">
+                @php
+                    $maxMinutes = count($reportData) > 0 ? max(array_column($reportData, 'late_minutes')) : 0;
+                    $hours = floor($maxMinutes / 60);
+                    $mins = $maxMinutes % 60;
+                @endphp
+                @if($hours > 0)
+                    {{ $hours }} jam {{ $mins }} menit
+                @else
+                    {{ $mins }} menit
+                @endif
+            </div>
         </div>
     </div>
 
@@ -141,8 +163,13 @@
                     <td class="text-center">{{ \Carbon\Carbon::parse($record['shift_start'])->format('H:i') }}</td>
                     <td class="text-center">{{ \Carbon\Carbon::parse($record['check_in_time'])->format('H:i') }}</td>
                     <td class="text-center">
+                        @php
+                            $hours = floor($record['late_minutes'] / 60);
+                            $mins = $record['late_minutes'] % 60;
+                            $timeText = $hours > 0 ? "$hours jam $mins menit" : "$mins menit";
+                        @endphp
                         <span class="badge {{ $record['late_minutes'] > 60 ? 'badge-danger' : ($record['late_minutes'] > 30 ? 'badge-warning' : 'badge-info') }}">
-                            {{ $record['late_minutes'] }} menit
+                            {{ $timeText }}
                         </span>
                     </td>
                     <td>{{ $record['location'] }}</td>

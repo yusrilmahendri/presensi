@@ -38,7 +38,8 @@ class DashboardController extends Controller
             $shiftStart = \Carbon\Carbon::parse($checkInToday->shift->start_time);
             $shiftStart->setDate($checkInTime->year, $checkInTime->month, $checkInTime->day);
             
-            $diffMinutes = $checkInTime->diffInMinutes($shiftStart, false);
+            // Positive = late (check-in after shift), Negative = early (check-in before shift)
+            $diffMinutes = $shiftStart->diffInMinutes($checkInTime, false);
             
             if ($diffMinutes > 0) {
                 $todayStatus = 'late';
@@ -124,10 +125,11 @@ class DashboardController extends Controller
             $shiftStart->setDate($checkInTime->year, $checkInTime->month, $checkInTime->day);
             
             // Calculate difference in minutes
-            $diffMinutes = $checkInTime->diffInMinutes($shiftStart, false);
+            // Positive = late (check-in after shift), Negative = early (check-in before shift)
+            $diffMinutes = $shiftStart->diffInMinutes($checkInTime, false);
             
             if ($diffMinutes > 0) {
-                // Negative means late (check-in after shift start)
+                // Positive means late (check-in after shift start)
                 $totalLate++;
             } elseif ($diffMinutes >= -15) {
                 // Within 15 minutes early is on-time

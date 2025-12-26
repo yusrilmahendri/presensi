@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Attendance;
 use App\Models\AttendanceLocation;
+use App\Models\Leave;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -129,6 +130,63 @@ class AttendanceController extends Controller
             ], 400);
         }
 
+        // Check if user is on approved leave today
+        $today = Carbon::now('Asia/Jakarta')->startOfDay();
+        $hasLeaveToday = \App\Models\Leave::where('user_id', $user->id)
+            ->where('status', 'approved')
+            ->where('start_date', '<=', $today)
+            ->where('end_date', '>=', $today)
+            ->exists();
+        
+        if ($hasLeaveToday) {
+            return response()->json([
+                'success' => false,
+                'message' => '❌ Anda tidak dapat melakukan absensi karena sedang dalam masa cuti/izin yang telah disetujui. Silakan hubungi admin jika ada kesalahan.'
+            ], 400);
+        }
+
+        // Check if current time is within shift hours (with tolerance)
+        $currentTime = Carbon::now('Asia/Jakarta');
+        $shiftStart = Carbon::parse($user->shift->start_time);
+        $shiftEnd = Carbon::parse($user->shift->end_time);
+        
+        // Add tolerance: 2 hours before and 2 hours after shift
+        $tolerance = 120; // minutes
+        $shiftStartWithTolerance = $shiftStart->copy()->subMinutes($tolerance);
+        $shiftEndWithTolerance = $shiftEnd->copy()->addMinutes($tolerance);
+        
+        // Handle overnight shifts
+        if ($shiftEnd->lt($shiftStart)) {
+            $shiftEnd->addDay();
+            $shiftEndWithTolerance->addDay();
+        }
+        
+        $currentTimeOnly = Carbon::createFromFormat('H:i:s', $currentTime->format('H:i:s'));
+        $isWithinShift = false;
+        
+        if ($shiftEnd->gt($shiftStart)) {
+            // Normal shift (same day)
+            $isWithinShift = $currentTimeOnly->between(
+                $shiftStartWithTolerance->copy()->setDate($currentTimeOnly->year, $currentTimeOnly->month, $currentTimeOnly->day),
+                $shiftEndWithTolerance->copy()->setDate($currentTimeOnly->year, $currentTimeOnly->month, $currentTimeOnly->day)
+            );
+        } else {
+            // Overnight shift
+            $isWithinShift = $currentTimeOnly->gte($shiftStartWithTolerance->copy()->setDate($currentTimeOnly->year, $currentTimeOnly->month, $currentTimeOnly->day)) ||
+                            $currentTimeOnly->lte($shiftEndWithTolerance->copy()->setDate($currentTimeOnly->year, $currentTimeOnly->month, $currentTimeOnly->day));
+        }
+        
+        if (!$isWithinShift) {
+            return response()->json([
+                'success' => false,
+                'message' => '⏰ Absensi hanya dapat dilakukan dalam jam shift Anda!\n\n' .
+                            '🕒 Shift: ' . $user->shift->name . '\n' .
+                            '⏰ Jam: ' . $shiftStart->format('H:i') . ' - ' . $shiftEnd->format('H:i') . '\n' .
+                            '📍 Waktu sekarang: ' . $currentTime->format('H:i') . '\n\n' .
+                            '💡 Anda dapat melakukan absensi 2 jam sebelum hingga 2 jam setelah jam shift.'
+            ], 400);
+        }
+
         // Find nearest location within organization
         $locations = AttendanceLocation::where('organization_id', $user->organization_id)->get();
         
@@ -171,15 +229,6 @@ class AttendanceController extends Controller
                             '📏 Jarak Anda: ' . round($closestDistance) . 'm | ' .
                             '⚠️ Kurang: ' . $selisih . 'm lagi. ' .
                             '💡 Solusi: Berjalanlah lebih dekat ke titik lokasi atau hubungi admin untuk verifikasi koordinat.'
-            ], 400);
-        }
-
-        // Check if shift is active
-        $currentTime = Carbon::now('Asia/Jakarta');
-        if (!$user->shift->isActiveAt($currentTime)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Absen hanya dapat dilakukan pada jam shift Anda ('. $user->shift->name .': '. Carbon::parse($user->shift->start_time)->format('H:i') . ' - ' . Carbon::parse($user->shift->end_time)->format('H:i') . ').'
             ], 400);
         }
 

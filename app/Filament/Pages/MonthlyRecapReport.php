@@ -105,6 +105,7 @@ class MonthlyRecapReport extends Page implements HasForms
         
         $query = User::query()
             ->where('role', 'karyawan')
+            ->where('organization_id', auth()->user()->organization_id)
             ->with(['shift']);
         
         if ($this->userId && $this->userId !== 'all') {

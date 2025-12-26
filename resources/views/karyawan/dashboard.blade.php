@@ -362,7 +362,8 @@
                                                     $checkInTime = $attendance->attendance_time;
                                                     $shiftStart = \Carbon\Carbon::parse($attendance->shift->start_time);
                                                     $shiftStart->setDate($checkInTime->year, $checkInTime->month, $checkInTime->day);
-                                                    $diffMinutes = $checkInTime->diffInMinutes($shiftStart, false);
+                                                    // Positive = late, Negative = early
+                                                    $diffMinutes = $shiftStart->diffInMinutes($checkInTime, false);
                                                     
                                                     if ($diffMinutes > 0) {
                                                         $label = 'Terlambat';

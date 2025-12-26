@@ -27,9 +27,9 @@ class DepartmentResource extends Resource
     
     public static function shouldRegisterNavigation(): bool
     {
-        // Hanya tampilkan jika admin dan karyawan >= 15
+        // Hanya tampilkan jika admin (bukan superadmin) dan karyawan >= 15
         $user = auth()->user();
-        if (!$user || $user->role !== 'admin') {
+        if (!$user || $user->role !== 'admin' || $user->isSuperAdmin()) {
             return false;
         }
         

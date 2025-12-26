@@ -48,14 +48,32 @@
                     <div class="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-lg border border-orange-200 dark:border-orange-800">
                         <div class="text-sm text-orange-600 dark:text-orange-400">Rata-rata Terlambat</div>
                         <div class="text-2xl font-bold text-orange-700 dark:text-orange-300">
-                            {{ count($reportData) > 0 ? round(array_sum(array_column($reportData, 'late_minutes')) / count($reportData)) : 0 }} menit
+                            @php
+                                $avgMinutes = count($reportData) > 0 ? round(array_sum(array_column($reportData, 'late_minutes')) / count($reportData)) : 0;
+                                $hours = floor($avgMinutes / 60);
+                                $mins = $avgMinutes % 60;
+                            @endphp
+                            @if($hours > 0)
+                                {{ $hours }} jam {{ $mins }} menit
+                            @else
+                                {{ $mins }} menit
+                            @endif
                         </div>
                     </div>
                     
                     <div class="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg border border-yellow-200 dark:border-yellow-800">
                         <div class="text-sm text-yellow-600 dark:text-yellow-400">Terlambat Terlama</div>
                         <div class="text-2xl font-bold text-yellow-700 dark:text-yellow-300">
-                            {{ count($reportData) > 0 ? max(array_column($reportData, 'late_minutes')) : 0 }} menit
+                            @php
+                                $maxMinutes = count($reportData) > 0 ? max(array_column($reportData, 'late_minutes')) : 0;
+                                $hours = floor($maxMinutes / 60);
+                                $mins = $maxMinutes % 60;
+                            @endphp
+                            @if($hours > 0)
+                                {{ $hours }} jam {{ $mins }} menit
+                            @else
+                                {{ $mins }} menit
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -86,11 +104,16 @@
                                     <td class="px-4 py-3 text-center">{{ \Carbon\Carbon::parse($record['shift_start'])->format('H:i') }}</td>
                                     <td class="px-4 py-3 text-center">{{ \Carbon\Carbon::parse($record['check_in_time'])->format('H:i') }}</td>
                                     <td class="px-4 py-3 text-center">
+                                        @php
+                                            $hours = floor($record['late_minutes'] / 60);
+                                            $mins = $record['late_minutes'] % 60;
+                                            $timeText = $hours > 0 ? "$hours jam $mins menit" : "$mins menit";
+                                        @endphp
                                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
                                             {{ $record['late_minutes'] > 60 ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300' : 
                                                ($record['late_minutes'] > 30 ? 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300' : 
                                                'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300') }}">
-                                            {{ $record['late_minutes'] }} menit
+                                            {{ $timeText }}
                                         </span>
                                     </td>
                                     <td class="px-4 py-3">{{ $record['location'] }}</td>

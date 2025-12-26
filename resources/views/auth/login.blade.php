@@ -466,7 +466,7 @@
 
                 <div class="login-footer">
                     <small class="text-muted">
-                        <strong>Karyawan:</strong> Gunakan NIK/NIP | <strong>Admin:</strong> Gunakan Username
+                        <strong>Karyawan:</strong> Gunakan NIK/NIP/EMAIL | <strong>Admin:</strong> Gunakan Username
                     </small>
                 </div>
                  <!-- <p class="copyright-text"> -->

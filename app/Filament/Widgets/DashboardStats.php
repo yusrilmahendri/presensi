@@ -26,16 +26,36 @@ class DashboardStats extends BaseWidget
         $thisMonth = Carbon::now()->startOfMonth();
         $thisWeek = Carbon::now()->startOfWeek();
 
-        $totalKaryawan = User::where('role', 'karyawan')->count();
-        $absensiHariIni = Attendance::whereDate('attendance_time', $today)->count();
-        $absensiBulanIni = Attendance::where('attendance_time', '>=', $thisMonth)->count();
+        $totalKaryawan = User::where('role', 'karyawan')
+            ->where('organization_id', auth()->user()->organization_id)
+            ->count();
+        $absensiHariIni = Attendance::whereDate('attendance_time', $today)
+            ->whereHas('user', function ($q) {
+                $q->where('organization_id', auth()->user()->organization_id);
+            })
+            ->count();
+        $absensiBulanIni = Attendance::where('attendance_time', '>=', $thisMonth)
+            ->whereHas('user', function ($q) {
+                $q->where('organization_id', auth()->user()->organization_id);
+            })
+            ->count();
         $checkInHariIni = Attendance::whereDate('attendance_time', $today)
             ->where('type', 'check_in')
+            ->whereHas('user', function ($q) {
+                $q->where('organization_id', auth()->user()->organization_id);
+            })
             ->count();
         $checkOutHariIni = Attendance::whereDate('attendance_time', $today)
             ->where('type', 'check_out')
+            ->whereHas('user', function ($q) {
+                $q->where('organization_id', auth()->user()->organization_id);
+            })
             ->count();
-        $absensiMingguIni = Attendance::where('attendance_time', '>=', $thisWeek)->count();
+        $absensiMingguIni = Attendance::where('attendance_time', '>=', $thisWeek)
+            ->whereHas('user', function ($q) {
+                $q->where('organization_id', auth()->user()->organization_id);
+            })
+            ->count();
 
         return [
             Stat::make('Total Karyawan', $totalKaryawan)

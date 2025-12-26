@@ -29,6 +29,12 @@ class ShiftChangeRequestResource extends Resource
     
     protected static ?int $navigationSort = 20;
     
+    public static function shouldRegisterNavigation(): bool
+    {
+        $user = auth()->user();
+        return $user && $user->isAdmin() && !$user->isSuperAdmin();
+    }
+    
     public static function getNavigationBadge(): ?string
     {
         return static::getModel()::where('organization_id', auth()->user()->organization_id)

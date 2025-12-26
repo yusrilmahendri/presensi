@@ -23,6 +23,57 @@ class QuickCheckInOut extends Widget
         try {
             $user = auth()->user();
             
+            // Check if user is on approved leave today
+            $today = Carbon::today();
+            $hasLeaveToday = \App\Models\Leave::where('user_id', $user->id)
+                ->where('status', 'approved')
+                ->where('start_date', '<=', $today)
+                ->where('end_date', '>=', $today)
+                ->exists();
+            
+            if ($hasLeaveToday) {
+                $this->dispatch('check-in-error', message: 'Anda tidak dapat melakukan check-in karena sedang dalam masa cuti/izin yang telah disetujui.');
+                return;
+            }
+            
+            // Check if current time is within shift hours (with tolerance)
+            if ($user->shift) {
+                $currentTime = Carbon::now('Asia/Jakarta');
+                $shiftStart = Carbon::parse($user->shift->start_time);
+                $shiftEnd = Carbon::parse($user->shift->end_time);
+                
+                // Add tolerance: 2 hours before and 2 hours after shift
+                $tolerance = 120; // minutes
+                $shiftStartWithTolerance = $shiftStart->copy()->subMinutes($tolerance);
+                $shiftEndWithTolerance = $shiftEnd->copy()->addMinutes($tolerance);
+                
+                // Handle overnight shifts
+                if ($shiftEnd->lt($shiftStart)) {
+                    $shiftEnd->addDay();
+                    $shiftEndWithTolerance->addDay();
+                }
+                
+                $currentTimeOnly = Carbon::createFromFormat('H:i:s', $currentTime->format('H:i:s'));
+                $isWithinShift = false;
+                
+                if ($shiftEnd->gt($shiftStart)) {
+                    // Normal shift (same day)
+                    $isWithinShift = $currentTimeOnly->between(
+                        $shiftStartWithTolerance->copy()->setDate($currentTimeOnly->year, $currentTimeOnly->month, $currentTimeOnly->day),
+                        $shiftEndWithTolerance->copy()->setDate($currentTimeOnly->year, $currentTimeOnly->month, $currentTimeOnly->day)
+                    );
+                } else {
+                    // Overnight shift
+                    $isWithinShift = $currentTimeOnly->gte($shiftStartWithTolerance->copy()->setDate($currentTimeOnly->year, $currentTimeOnly->month, $currentTimeOnly->day)) ||
+                                    $currentTimeOnly->lte($shiftEndWithTolerance->copy()->setDate($currentTimeOnly->year, $currentTimeOnly->month, $currentTimeOnly->day));
+                }
+                
+                if (!$isWithinShift) {
+                    $this->dispatch('check-in-error', message: 'Absensi hanya dapat dilakukan dalam jam shift Anda (' . $user->shift->name . ': ' . $shiftStart->format('H:i') . ' - ' . $shiftEnd->format('H:i') . '). Toleransi: 2 jam sebelum/sesudah.');
+                    return;
+                }
+            }
+            
             // Check if already checked in today
             $existingCheckIn = Attendance::where('user_id', $user->id)
                 ->where('type', 'check_in')
@@ -66,6 +117,57 @@ class QuickCheckInOut extends Widget
     {
         try {
             $user = auth()->user();
+            
+            // Check if user is on approved leave today
+            $today = Carbon::today();
+            $hasLeaveToday = \App\Models\Leave::where('user_id', $user->id)
+                ->where('status', 'approved')
+                ->where('start_date', '<=', $today)
+                ->where('end_date', '>=', $today)
+                ->exists();
+            
+            if ($hasLeaveToday) {
+                $this->dispatch('check-out-error', message: 'Anda tidak dapat melakukan check-out karena sedang dalam masa cuti/izin yang telah disetujui.');
+                return;
+            }
+            
+            // Check if current time is within shift hours (with tolerance)
+            if ($user->shift) {
+                $currentTime = Carbon::now('Asia/Jakarta');
+                $shiftStart = Carbon::parse($user->shift->start_time);
+                $shiftEnd = Carbon::parse($user->shift->end_time);
+                
+                // Add tolerance: 2 hours before and 2 hours after shift
+                $tolerance = 120; // minutes
+                $shiftStartWithTolerance = $shiftStart->copy()->subMinutes($tolerance);
+                $shiftEndWithTolerance = $shiftEnd->copy()->addMinutes($tolerance);
+                
+                // Handle overnight shifts
+                if ($shiftEnd->lt($shiftStart)) {
+                    $shiftEnd->addDay();
+                    $shiftEndWithTolerance->addDay();
+                }
+                
+                $currentTimeOnly = Carbon::createFromFormat('H:i:s', $currentTime->format('H:i:s'));
+                $isWithinShift = false;
+                
+                if ($shiftEnd->gt($shiftStart)) {
+                    // Normal shift (same day)
+                    $isWithinShift = $currentTimeOnly->between(
+                        $shiftStartWithTolerance->copy()->setDate($currentTimeOnly->year, $currentTimeOnly->month, $currentTimeOnly->day),
+                        $shiftEndWithTolerance->copy()->setDate($currentTimeOnly->year, $currentTimeOnly->month, $currentTimeOnly->day)
+                    );
+                } else {
+                    // Overnight shift
+                    $isWithinShift = $currentTimeOnly->gte($shiftStartWithTolerance->copy()->setDate($currentTimeOnly->year, $currentTimeOnly->month, $currentTimeOnly->day)) ||
+                                    $currentTimeOnly->lte($shiftEndWithTolerance->copy()->setDate($currentTimeOnly->year, $currentTimeOnly->month, $currentTimeOnly->day));
+                }
+                
+                if (!$isWithinShift) {
+                    $this->dispatch('check-out-error', message: 'Absensi hanya dapat dilakukan dalam jam shift Anda (' . $user->shift->name . ': ' . $shiftStart->format('H:i') . ' - ' . $shiftEnd->format('H:i') . '). Toleransi: 2 jam sebelum/sesudah.');
+                    return;
+                }
+            }
             
             // Check if already checked out today
             $existingCheckOut = Attendance::where('user_id', $user->id)
