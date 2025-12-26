@@ -12,7 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('overtimes', function (Blueprint $table) {
-            $table->text('reason')->nullable()->after('duration_minutes');
+            if (!Schema::hasColumn('overtimes', 'reason')) {
+                $table->text('reason')->nullable()->after('duration_minutes');
+            }
         });
     }
 
@@ -22,7 +24,9 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('overtimes', function (Blueprint $table) {
-            $table->dropColumn('reason');
+            if (Schema::hasColumn('overtimes', 'reason')) {
+                $table->dropColumn('reason');
+            }
         });
     }
 };
