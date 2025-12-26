@@ -14,6 +14,7 @@ class ShiftChangeRequest extends Model
         'user_id',
         'current_shift_id',
         'requested_shift_id',
+        'effective_date',
         'reason',
         'status',
         'approved_by',
@@ -24,6 +25,7 @@ class ShiftChangeRequest extends Model
 
     protected $casts = [
         'approved_at' => 'datetime',
+        'effective_date' => 'date',
     ];
 
     public function user(): BelongsTo

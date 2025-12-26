@@ -77,13 +77,13 @@
                         <a class="nav-link" href="{{ route('attendance.index') }}">Absen</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ route('karyawan.dashboard') }}">Dashboard</a>
+                        <a class="nav-link" href="{{ route('karyawan.dashboard') }}">Dasbor</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link active" href="{{ route('karyawan.leaves.index') }}">Pengajuan Izin</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ route('karyawan.profile') }}">Profile</a>
+                        <a class="nav-link" href="{{ route('karyawan.profile') }}">Profil</a>
                     </li>
                     <li class="nav-item">
                         <form method="POST" action="{{ route('karyawan.logout') }}" class="d-inline">

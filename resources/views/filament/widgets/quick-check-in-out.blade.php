@@ -2,7 +2,7 @@
     <x-filament::section>
         <div class="space-y-4">
             <div class="flex items-center justify-between">
-                <h3 class="text-lg font-semibold">Quick Check In/Out</h3>
+                <h3 class="text-lg font-semibold">Absen Cepat Masuk/Keluar</h3>
                 <div class="text-sm text-gray-500">
                     {{ now()->format('d M Y H:i') }}
                 </div>
@@ -21,7 +21,7 @@
                         <svg class="w-5 h-5 {{ $checkIn ? 'text-green-600' : 'text-gray-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
                         </svg>
-                        <span class="font-semibold {{ $checkIn ? 'text-green-700' : 'text-gray-600' }}">Check In</span>
+                        <span class="font-semibold {{ $checkIn ? 'text-green-700' : 'text-gray-600' }}">Masuk</span>
                     </div>
                     @if($checkIn)
                         <div class="text-sm text-green-600">
@@ -32,7 +32,7 @@
                         </div>
                     @else
                         <div class="text-sm text-gray-500">
-                            Belum check-in
+                            Belum masuk
                         </div>
                     @endif
                 </div>
@@ -43,7 +43,7 @@
                         <svg class="w-5 h-5 {{ $checkOut ? 'text-orange-600' : 'text-gray-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                         </svg>
-                        <span class="font-semibold {{ $checkOut ? 'text-orange-700' : 'text-gray-600' }}">Check Out</span>
+                        <span class="font-semibold {{ $checkOut ? 'text-orange-700' : 'text-gray-600' }}">Keluar</span>
                     </div>
                     @if($checkOut)
                         <div class="text-sm text-orange-600">
@@ -54,7 +54,7 @@
                         </div>
                     @else
                         <div class="text-sm text-gray-500">
-                            Belum check-out
+                            Belum keluar
                         </div>
                     @endif
                 </div>
@@ -90,10 +90,10 @@
                         <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
                         </svg>
-                        Check In
+                        Masuk
                     </div>
                     <div wire:loading wire:target="checkIn">
-                        Processing...
+                        Memproses...
                     </div>
                 </button>
                 
@@ -110,16 +110,16 @@
                         <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                         </svg>
-                        Check Out
+                        Keluar
                     </div>
                     <div wire:loading wire:target="checkOut">
-                        Processing...
+                        Memproses...
                     </div>
                 </button>
             </div>
             
             <div class="text-xs text-gray-500 text-center">
-                Tombol check-in/out akan otomatis disabled setelah digunakan
+                Tombol masuk/keluar akan otomatis dinonaktifkan setelah digunakan
             </div>
         </div>
     </x-filament::section>
@@ -136,7 +136,7 @@
             
             @this.on('check-in-error', (event) => {
                 new FilamentNotification()
-                    .title('Error!')
+                    .title('Kesalahan!')
                     .danger()
                     .body(event.message)
                     .send();
@@ -152,7 +152,7 @@
             
             @this.on('check-out-error', (event) => {
                 new FilamentNotification()
-                    .title('Error!')
+                    .title('Kesalahan!')
                     .danger()
                     .body(event.message)
                     .send();

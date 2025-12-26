@@ -76,7 +76,7 @@
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{{ route('karyawan.dashboard') }}">
-                            <i class="fas fa-tachometer-alt"></i> Dashboard
+                            <i class="fas fa-tachometer-alt"></i> Dasbor
                         </a>
                     </li>
                     <li class="nav-item">
@@ -91,14 +91,14 @@
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{{ route('karyawan.profile') }}">
-                            <i class="fas fa-user"></i> Profile
+                            <i class="fas fa-user"></i> Profil
                         </a>
                     </li>
                     <li class="nav-item">
                         <form method="POST" action="{{ route('karyawan.logout') }}" style="display: inline;">
                             @csrf
                             <button type="submit" class="nav-link btn btn-link" style="color: white;">
-                                <i class="fas fa-sign-out-alt"></i> Logout
+                                <i class="fas fa-sign-out-alt"></i> Keluar
                             </button>
                         </form>
                     </li>
@@ -166,6 +166,20 @@
                     </div>
                     
                     <div class="mb-3">
+                        <label class="form-label"><i class="fas fa-calendar-day"></i> Tanggal Efektif Pergantian</label>
+                        <input type="date" 
+                               name="effective_date" 
+                               class="form-control @error('effective_date') is-invalid @enderror" 
+                               value="{{ old('effective_date', date('Y-m-d')) }}"
+                               min="{{ date('Y-m-d') }}"
+                               required>
+                        @error('effective_date')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                        <small class="text-muted">Pilih tanggal kapan shift baru akan mulai berlaku</small>
+                    </div>
+                    
+                    <div class="mb-3">
                         <label class="form-label"><i class="fas fa-comment"></i> Alasan Pergantian</label>
                         <textarea name="reason" class="form-control @error('reason') is-invalid @enderror" 
                                   rows="4" required 
@@ -195,6 +209,7 @@
                             <thead>
                                 <tr>
                                     <th>Tanggal Pengajuan</th>
+                                    <th>Tanggal Efektif</th>
                                     <th>Dari Shift</th>
                                     <th>Ke Shift</th>
                                     <th>Alasan</th>
@@ -206,6 +221,12 @@
                                 @foreach($requests as $request)
                                     <tr>
                                         <td>{{ $request->created_at->format('d M Y H:i') }}</td>
+                                        <td>
+                                            <span class="badge bg-primary">
+                                                <i class="fas fa-calendar-day"></i> 
+                                                {{ $request->effective_date ? \Carbon\Carbon::parse($request->effective_date)->format('d M Y') : '-' }}
+                                            </span>
+                                        </td>
                                         <td>
                                             <span class="badge bg-secondary">{{ $request->currentShift->name }}</span>
                                         </td>
@@ -266,6 +287,16 @@
                                                     <div class="mb-3">
                                                         <label class="text-muted small">Tanggal Pengajuan:</label>
                                                         <p class="fw-bold mb-0">{{ $request->created_at->format('d M Y H:i') }}</p>
+                                                    </div>
+                                                    
+                                                    <div class="mb-3">
+                                                        <label class="text-muted small">Tanggal Efektif Pergantian:</label>
+                                                        <p class="fw-bold mb-0">
+                                                            <span class="badge bg-primary">
+                                                                <i class="fas fa-calendar-day"></i> 
+                                                                {{ $request->effective_date ? \Carbon\Carbon::parse($request->effective_date)->format('d M Y') : '-' }}
+                                                            </span>
+                                                        </p>
                                                     </div>
                                                     
                                                     <div class="mb-3">

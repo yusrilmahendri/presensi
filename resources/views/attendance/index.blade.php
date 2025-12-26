@@ -138,16 +138,16 @@
             <div class="d-flex justify-content-between align-items-center mb-4 header-section">
                 <h2 class="mb-0">{{ $user->organization->name ?? 'Sistem Presensi' }}</h2>
                 <div class="header-actions">
-                    <a href="{{ route('karyawan.dashboard') }}" class="btn btn-sm btn-outline-primary">Dashboard</a>
-                    <a href="{{ route('karyawan.profile') }}" class="btn btn-sm btn-outline-secondary">Profile</a>
+                    <a href="{{ route('karyawan.dashboard') }}" class="btn btn-sm btn-outline-primary">Dasbor</a>
+                    <a href="{{ route('karyawan.profile') }}" class="btn btn-sm btn-outline-secondary">Profil</a>
                     <form method="POST" action="{{ route('karyawan.logout') }}" class="d-inline">
                         @csrf
-                        <button type="submit" class="btn btn-sm btn-outline-danger">Logout</button>
+                        <button type="submit" class="btn btn-sm btn-outline-danger">Keluar</button>
                     </form>
                 </div>
             </div>
             <p class="text-center text-muted mb-4">
-                Logged in as: <strong>{{ $user->name }}</strong> ({{ $user->email }})
+                Masuk sebagai: <strong>{{ $user->name }}</strong> ({{ $user->email }})
             </p>
             
             <form id="attendanceForm">
@@ -197,16 +197,16 @@
                     <label class="form-label">Tipe Absen</label>
                     <div class="btn-group w-100" role="group">
                         <input type="radio" class="btn-check" name="type" id="check_in" value="check_in" checked>
-                        <label class="btn btn-outline-success" for="check_in">Check In</label>
+                        <label class="btn btn-outline-success" for="check_in">Masuk</label>
 
                         <input type="radio" class="btn-check" name="type" id="check_out" value="check_out">
-                        <label class="btn btn-outline-danger" for="check_out">Check Out</label>
+                        <label class="btn btn-outline-danger" for="check_out">Keluar</label>
                     </div>
                 </div>
 
                 <!-- Submit Button -->
                 <button type="submit" class="btn btn-primary w-100 btn-lg" id="submitBtn" disabled>
-                    Submit Presensi
+                    Kirim Presensi
                 </button>
             </form>
         </div>

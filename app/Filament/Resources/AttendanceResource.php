@@ -60,8 +60,8 @@ class AttendanceResource extends Resource
                 Forms\Components\Select::make('type')
                     ->label('Tipe')
                     ->options([
-                        'check_in' => 'Check In',
-                        'check_out' => 'Check Out',
+                        'check_in' => 'Masuk',
+                        'check_out' => 'Keluar',
                     ])
                     ->required(),
                 Forms\Components\DateTimePicker::make('attendance_time')
@@ -110,8 +110,8 @@ class AttendanceResource extends Resource
                         default => 'gray',
                     })
                     ->formatStateUsing(fn (string $state): string => match ($state) {
-                        'check_in' => 'Check In',
-                        'check_out' => 'Check Out',
+                        'check_in' => 'Masuk',
+                        'check_out' => 'Keluar',
                         default => $state,
                     }),
                 Tables\Columns\TextColumn::make('attendance_time')
@@ -141,8 +141,8 @@ class AttendanceResource extends Resource
                 SelectFilter::make('type')
                     ->label('Tipe')
                     ->options([
-                        'check_in' => 'Check In',
-                        'check_out' => 'Check Out',
+                        'check_in' => 'Masuk',
+                        'check_out' => 'Keluar',
                     ]),
                 Filter::make('attendance_time')
                     ->form([

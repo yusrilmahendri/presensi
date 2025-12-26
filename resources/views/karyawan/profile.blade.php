@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Profile - {{ $user->organization->name ?? 'Sistem Presensi' }}</title>
+    <title>Profil - {{ $user->organization->name ?? 'Sistem Presensi' }}</title>
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -73,19 +73,19 @@
                         <a class="nav-link" href="{{ route('attendance.index') }}">Absen</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ route('karyawan.dashboard') }}">Dashboard</a>
+                        <a class="nav-link" href="{{ route('karyawan.dashboard') }}">Dasbor</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{{ route('karyawan.leaves.index') }}">Pengajuan Izin</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link active" href="{{ route('karyawan.profile') }}">Profile</a>
+                        <a class="nav-link active" href="{{ route('karyawan.profile') }}">Profil</a>
                     </li>
                     <li class="nav-item">
                         <form method="POST" action="{{ route('karyawan.logout') }}" class="d-inline">
                             @csrf
                             <button type="submit" class="btn btn-link nav-link" style="border: none; background: none; color: white !important;">
-                                Logout
+                                Keluar
                             </button>
                         </form>
                     </li>
@@ -100,7 +100,7 @@
                 <!-- Profile Information Card -->
                 <div class="card mb-4">
                     <div class="card-header">
-                        <i class="fas fa-user-circle me-2"></i> Informasi Profile
+                        <i class="fas fa-user-circle me-2"></i> Informasi Profil
                     </div>
                     <div class="card-body">
                         <div class="row">
@@ -110,7 +110,7 @@
                                 <small class="text-muted">Data ini tidak dapat diubah</small>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="info-label">Email</label>
+                                <label class="info-label">Surel</label>
                                 <input type="email" class="form-control disabled-field" value="{{ $user->email }}" disabled readonly>
                                 <small class="text-muted">Data ini tidak dapat diubah</small>
                             </div>

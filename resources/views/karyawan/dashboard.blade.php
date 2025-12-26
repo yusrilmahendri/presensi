@@ -81,7 +81,7 @@
                         <a class="nav-link" href="{{ route('attendance.index') }}">Absen</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link active" href="{{ route('karyawan.dashboard') }}">Dashboard</a>
+                        <a class="nav-link active" href="{{ route('karyawan.dashboard') }}">Dasbor</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{{ route('karyawan.leaves.index') }}">Pengajuan Izin</a>
@@ -90,13 +90,13 @@
                         <a class="nav-link" href="{{ route('shift-change.index') }}">Pergantian Shift</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ route('karyawan.profile') }}">Profile</a>
+                        <a class="nav-link" href="{{ route('karyawan.profile') }}">Profil</a>
                     </li>
                     <li class="nav-item">
                         <form method="POST" action="{{ route('karyawan.logout') }}" class="d-inline">
                             @csrf
                             <button type="submit" class="btn btn-link nav-link" style="border: none; background: none; color: white !important;">
-                                Logout
+                                Keluar
                             </button>
                         </form>
                     </li>
@@ -111,7 +111,7 @@
             <div class="card-body">
                 <h4>{{ $greeting }}, {{ $user->name }}!</h4>
                 <p class="text-muted mb-0">
-                    Email: {{ $user->email }} | Shift: {{ $user->shift->name ?? 'Tidak ada' }}
+                    Surel: {{ $user->email }} | Shift: {{ $user->shift->name ?? 'Tidak ada' }}
                 </p>
             </div>
         </div>

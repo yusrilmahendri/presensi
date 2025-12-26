@@ -83,6 +83,13 @@ class ShiftChangeRequestResource extends Resource
                     ->disabled(fn ($record) => $record !== null && $record->status !== 'pending')
                     ->dehydrated(),
                     
+                Forms\Components\DatePicker::make('effective_date')
+                    ->label('Tanggal Efektif Pergantian')
+                    ->required()
+                    ->minDate(now()->toDateString())
+                    ->disabled(fn ($record) => $record !== null && $record->status !== 'pending')
+                    ->dehydrated(),
+                    
                 Forms\Components\Textarea::make('reason')
                     ->label('Alasan Pergantian')
                     ->required()
@@ -119,6 +126,13 @@ class ShiftChangeRequestResource extends Resource
                 Tables\Columns\TextColumn::make('user.name')
                     ->label('Karyawan')
                     ->searchable()
+                    ->sortable(),
+                    
+                Tables\Columns\TextColumn::make('effective_date')
+                    ->label('Tanggal Efektif')
+                    ->date('d M Y')
+                    ->badge()
+                    ->color('primary')
                     ->sortable(),
                     
                 Tables\Columns\TextColumn::make('currentShift.name')

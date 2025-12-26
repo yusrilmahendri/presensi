@@ -40,6 +40,7 @@ class ShiftChangeRequestController extends Controller
         
         $request->validate([
             'requested_shift_id' => 'required|exists:shifts,id',
+            'effective_date' => 'required|date|after_or_equal:today',
             'reason' => 'required|string|min:10',
         ]);
         
@@ -56,6 +57,7 @@ class ShiftChangeRequestController extends Controller
             'user_id' => $user->id,
             'current_shift_id' => $user->shift_id,
             'requested_shift_id' => $request->requested_shift_id,
+            'effective_date' => $request->effective_date,
             'reason' => $request->reason,
             'status' => 'pending',
             'organization_id' => $user->organization_id,
