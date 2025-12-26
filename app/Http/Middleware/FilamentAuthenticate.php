@@ -12,6 +12,6 @@ class FilamentAuthenticate extends BaseAuthenticate
      */
     protected function redirectTo($request): ?string
     {
-        return route('karyawan.login');
+        return route('login');
     }
 }

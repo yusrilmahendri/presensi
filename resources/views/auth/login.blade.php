@@ -411,7 +411,7 @@
                     </div>
                 @endif
 
-                <form method="POST" action="{{ route('karyawan.login.post') }}">
+                <form method="POST" action="{{ route('login.post') }}">
                     @csrf
 
                     <div class="mb-3">

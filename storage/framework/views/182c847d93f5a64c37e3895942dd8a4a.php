@@ -411,7 +411,7 @@
                     </div>
                 <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
 
-                <form method="POST" action="<?php echo e(route('karyawan.login.post')); ?>">
+                <form method="POST" action="<?php echo e(route('login.post')); ?>">
                     <?php echo csrf_field(); ?>
 
                     <div class="mb-3">

@@ -14,13 +14,13 @@ Route::get('/', function () {
         }
         return redirect()->route('karyawan.dashboard');
     }
-    return redirect()->route('karyawan.login');
+    return redirect()->route('login');
 });
 
 // Auth routes for karyawan
 Route::middleware('guest')->group(function () {
-    Route::get('/login', [AuthController::class, 'showLoginForm'])->name('karyawan.login');
-    Route::post('/login', [AuthController::class, 'login'])->name('karyawan.login.post');
+    Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login'); // Gunakan 'login' sebagai primary name
+    Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 });
 
 Route::middleware('auth')->group(function () {
