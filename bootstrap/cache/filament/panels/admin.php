@@ -1,0 +1,83 @@
+<?php return array (
+  'livewireComponents' => 
+  array (
+    'app.filament.resources.admin-resource.widgets.stats-overview' => 'App\\Filament\\Resources\\AdminResource\\Widgets\\StatsOverview',
+    'app.filament.resources.attendance-location-resource.pages.create-attendance-location' => 'App\\Filament\\Resources\\AttendanceLocationResource\\Pages\\CreateAttendanceLocation',
+    'app.filament.resources.attendance-location-resource.pages.edit-attendance-location' => 'App\\Filament\\Resources\\AttendanceLocationResource\\Pages\\EditAttendanceLocation',
+    'app.filament.resources.attendance-location-resource.pages.list-attendance-locations' => 'App\\Filament\\Resources\\AttendanceLocationResource\\Pages\\ListAttendanceLocations',
+    'app.filament.resources.attendance-resource.pages.create-attendance' => 'App\\Filament\\Resources\\AttendanceResource\\Pages\\CreateAttendance',
+    'app.filament.resources.attendance-resource.pages.edit-attendance' => 'App\\Filament\\Resources\\AttendanceResource\\Pages\\EditAttendance',
+    'app.filament.resources.attendance-resource.pages.list-attendances' => 'App\\Filament\\Resources\\AttendanceResource\\Pages\\ListAttendances',
+    'app.filament.resources.attendance-resource.pages.view-attendance' => 'App\\Filament\\Resources\\AttendanceResource\\Pages\\ViewAttendance',
+    'app.filament.resources.shift-resource.pages.create-shift' => 'App\\Filament\\Resources\\ShiftResource\\Pages\\CreateShift',
+    'app.filament.resources.shift-resource.pages.edit-shift' => 'App\\Filament\\Resources\\ShiftResource\\Pages\\EditShift',
+    'app.filament.resources.shift-resource.pages.list-shifts' => 'App\\Filament\\Resources\\ShiftResource\\Pages\\ListShifts',
+    'app.filament.resources.user-resource.pages.create-user' => 'App\\Filament\\Resources\\UserResource\\Pages\\CreateUser',
+    'app.filament.resources.user-resource.pages.edit-user' => 'App\\Filament\\Resources\\UserResource\\Pages\\EditUser',
+    'app.filament.resources.user-resource.pages.list-users' => 'App\\Filament\\Resources\\UserResource\\Pages\\ListUsers',
+    'filament.pages.dashboard' => 'Filament\\Pages\\Dashboard',
+    'app.filament.widgets.attendance-chart' => 'App\\Filament\\Widgets\\AttendanceChart',
+    'app.filament.widgets.dashboard-stats' => 'App\\Filament\\Widgets\\DashboardStats',
+    'app.filament.widgets.recent-attendances' => 'App\\Filament\\Widgets\\RecentAttendances',
+    'filament.widgets.account-widget' => 'Filament\\Widgets\\AccountWidget',
+    'filament.livewire.database-notifications' => 'Filament\\Livewire\\DatabaseNotifications',
+    'filament.pages.auth.edit-profile' => 'Filament\\Pages\\Auth\\EditProfile',
+    'filament.livewire.global-search' => 'Filament\\Livewire\\GlobalSearch',
+    'filament.livewire.notifications' => 'Filament\\Livewire\\Notifications',
+    'filament.pages.auth.login' => 'Filament\\Pages\\Auth\\Login',
+  ),
+  'clusters' => 
+  array (
+  ),
+  'clusteredComponents' => 
+  array (
+  ),
+  'clusterDirectories' => 
+  array (
+  ),
+  'clusterNamespaces' => 
+  array (
+  ),
+  'pages' => 
+  array (
+    0 => 'Filament\\Pages\\Dashboard',
+  ),
+  'pageDirectories' => 
+  array (
+    0 => '/Users/mac/Documents/code/web/presensi/app/Filament/Pages',
+  ),
+  'pageNamespaces' => 
+  array (
+    0 => 'App\\Filament\\Pages',
+  ),
+  'resources' => 
+  array (
+    '/Users/mac/Documents/code/web/presensi/app/Filament/Resources/AttendanceLocationResource.php' => 'App\\Filament\\Resources\\AttendanceLocationResource',
+    '/Users/mac/Documents/code/web/presensi/app/Filament/Resources/AttendanceResource.php' => 'App\\Filament\\Resources\\AttendanceResource',
+    '/Users/mac/Documents/code/web/presensi/app/Filament/Resources/ShiftResource.php' => 'App\\Filament\\Resources\\ShiftResource',
+    '/Users/mac/Documents/code/web/presensi/app/Filament/Resources/UserResource.php' => 'App\\Filament\\Resources\\UserResource',
+  ),
+  'resourceDirectories' => 
+  array (
+    0 => '/Users/mac/Documents/code/web/presensi/app/Filament/Resources',
+  ),
+  'resourceNamespaces' => 
+  array (
+    0 => 'App\\Filament\\Resources',
+  ),
+  'widgets' => 
+  array (
+    '/Users/mac/Documents/code/web/presensi/app/Filament/Widgets/AttendanceChart.php' => 'App\\Filament\\Widgets\\AttendanceChart',
+    '/Users/mac/Documents/code/web/presensi/app/Filament/Widgets/DashboardStats.php' => 'App\\Filament\\Widgets\\DashboardStats',
+    '/Users/mac/Documents/code/web/presensi/app/Filament/Widgets/RecentAttendances.php' => 'App\\Filament\\Widgets\\RecentAttendances',
+    0 => 'Filament\\Widgets\\AccountWidget',
+  ),
+  'widgetDirectories' => 
+  array (
+    0 => '/Users/mac/Documents/code/web/presensi/app/Filament/Widgets',
+  ),
+  'widgetNamespaces' => 
+  array (
+    0 => 'App\\Filament\\Widgets',
+  ),
+);

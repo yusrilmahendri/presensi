@@ -1,0 +1,249 @@
+/* Custom Admin Login Styles - Modern & Responsive */
+.fi-simple-main {
+    background: white !important;
+    border-radius: 20px !important;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3) !important;
+    overflow: hidden !important;
+    max-width: 450px !important;
+    margin: 0 auto !important;
+    animation: fadeInUp 0.6s ease-out !important;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Background Gradient */
+body.fi-admin-login,
+.fi-main-ctn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    min-height: 100vh !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 20px !important;
+    position: relative !important;
+}
+
+/* Header Section Customization */
+.fi-simple-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    padding: 50px 40px !important;
+    text-align: center !important;
+    color: white !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+.fi-simple-header::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    background: url('data:image/svg+xml,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><defs><pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>') !important;
+    opacity: 0.3 !important;
+}
+
+/* Logo/Icon Styling */
+.fi-simple-header img,
+.fi-simple-header svg {
+    width: 80px !important;
+    height: 80px !important;
+    background: rgba(255, 255, 255, 0.2) !important;
+    border-radius: 50% !important;
+    padding: 15px !important;
+    margin: 0 auto 20px !important;
+    position: relative !important;
+    z-index: 1 !important;
+    backdrop-filter: blur(10px) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1) !important;
+}
+
+.fi-simple-header h1,
+.fi-simple-header h2 {
+    font-size: 28px !important;
+    font-weight: 700 !important;
+    margin-bottom: 8px !important;
+    position: relative !important;
+    z-index: 1 !important;
+    color: white !important;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Form Section */
+.fi-simple-main > form,
+.fi-simple-main > div:not(.fi-simple-header) {
+    padding: 40px !important;
+    background: white !important;
+}
+
+/* Input Styling */
+.fi-input-wrapper input,
+.fi-input {
+    width: 100% !important;
+    padding: 14px 16px !important;
+    border: 2px solid #e0e0e0 !important;
+    border-radius: 12px !important;
+    font-size: 15px !important;
+    transition: all 0.3s ease !important;
+    background: #f8f9fa !important;
+    margin-bottom: 5px !important;
+}
+
+.fi-input-wrapper input:focus,
+.fi-input:focus {
+    outline: none !important;
+    border-color: #667eea !important;
+    background: white !important;
+    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1) !important;
+}
+
+/* Labels */
+.fi-input-wrapper label,
+.fi-input-label {
+    font-weight: 600 !important;
+    color: #333 !important;
+    margin-bottom: 8px !important;
+    font-size: 14px !important;
+    display: block !important;
+}
+
+/* Button Styling */
+.fi-btn-primary,
+button[type="submit"] {
+    width: 100% !important;
+    padding: 14px !important;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    border: none !important;
+    border-radius: 12px !important;
+    color: white !important;
+    font-size: 16px !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4) !important;
+    margin-top: 10px !important;
+}
+
+.fi-btn-primary:hover,
+button[type="submit"]:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6) !important;
+}
+
+/* Checkbox Styling */
+.fi-checkbox input[type="checkbox"] {
+    width: 18px !important;
+    height: 18px !important;
+    cursor: pointer !important;
+    accent-color: #667eea !important;
+}
+
+/* Error Messages */
+.fi-error-message {
+    color: #dc3545 !important;
+    font-size: 13px !important;
+    margin-top: 6px !important;
+}
+
+/* Alert */
+.fi-alert {
+    border-radius: 12px !important;
+    padding: 12px 16px !important;
+    margin-bottom: 20px !important;
+}
+
+/* Responsive Design - Tablet */
+@media (max-width: 768px) {
+    .fi-simple-main {
+        max-width: 90% !important;
+    }
+    
+    .fi-simple-header {
+        padding: 40px 30px !important;
+    }
+    
+    .fi-simple-header img,
+    .fi-simple-header svg {
+        width: 70px !important;
+        height: 70px !important;
+    }
+    
+    .fi-simple-header h1,
+    .fi-simple-header h2 {
+        font-size: 24px !important;
+    }
+    
+    .fi-simple-main > form,
+    .fi-simple-main > div:not(.fi-simple-header) {
+        padding: 30px 25px !important;
+    }
+    
+    .fi-input-wrapper input,
+    .fi-input {
+        padding: 12px 14px !important;
+        font-size: 14px !important;
+    }
+    
+    .fi-btn-primary,
+    button[type="submit"] {
+        padding: 12px !important;
+        font-size: 15px !important;
+    }
+}
+
+/* Responsive Design - Mobile */
+@media (max-width: 576px) {
+    body.fi-admin-login,
+    .fi-main-ctn {
+        padding: 10px !important;
+    }
+    
+    .fi-simple-main {
+        max-width: 100% !important;
+        border-radius: 15px !important;
+    }
+    
+    .fi-simple-header {
+        padding: 30px 20px !important;
+    }
+    
+    .fi-simple-header img,
+    .fi-simple-header svg {
+        width: 60px !important;
+        height: 60px !important;
+        margin-bottom: 15px !important;
+    }
+    
+    .fi-simple-header h1,
+    .fi-simple-header h2 {
+        font-size: 22px !important;
+    }
+    
+    .fi-simple-main > form,
+    .fi-simple-main > div:not(.fi-simple-header) {
+        padding: 25px 20px !important;
+    }
+    
+    .fi-input-wrapper input,
+    .fi-input {
+        padding: 11px 12px !important;
+        font-size: 14px !important;
+    }
+    
+    .fi-btn-primary,
+    button[type="submit"] {
+        padding: 11px !important;
+        font-size: 15px !important;
+    }
+}
+
