@@ -1,0 +1,42 @@
+name: 🚀 Remote Git Deploy to Hostinger
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🔐 Deploy to Hostinger via SSH
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            cd ~/domains/pioneersolve.id/public_html/hadir
+
+            echo "🧹 Resetting local changes..."
+            git fetch --all
+            git reset --hard origin/main
+
+            echo "📦 Pulling latest code..."
+            git pull origin main
+
+            echo "📦 Running Composer Install..."
+            composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+
+            echo "⚙️ Running Database Migration..."
+            php artisan migrate --force
+
+            echo "🚀 Optimizing Laravel Cache..."
+            php artisan config:clear
+            php artisan cache:clear
+            php artisan route:clear
+            php artisan view:clear
+            php artisan optimize
+
+            echo "✅ Congratulations! Deployment completed successfully!"
