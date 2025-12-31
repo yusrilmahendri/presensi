@@ -35,28 +35,60 @@ class AttendanceLocationResource extends Resource
                 Forms\Components\TextInput::make('name')
                     ->label('Nama Lokasi')
                     ->required()
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('latitude')
-                    ->label('Latitude')
-                    ->numeric()
-                    ->required()
-                    ->step(0.00000001),
-                Forms\Components\TextInput::make('longitude')
-                    ->label('Longitude')
-                    ->numeric()
-                    ->required()
-                    ->step(0.00000001),
-                Forms\Components\TextInput::make('radius')
-                    ->label('Radius (meter)')
-                    ->numeric()
-                    ->required()
-                    ->default(5)
-                    ->suffix('meter'),
+                    ->maxLength(255)
+                    ->columnSpan(2),
+                
+                Forms\Components\Section::make('Koordinat Lokasi')
+                    ->description('Pilih lokasi di peta atau masukkan koordinat manual')
+                    ->schema([
+                        Forms\Components\ViewField::make('map_picker')
+                            ->label('Pilih Lokasi di Peta')
+                            ->view('filament.forms.components.map-picker')
+                            ->afterStateHydrated(function ($component, $state, $get) {
+                                $component->state([
+                                    'latitude' => $get('latitude') ?? -6.2088,
+                                    'longitude' => $get('longitude') ?? 106.8456,
+                                ]);
+                            })
+                            ->columnSpanFull(),
+                        
+                        Forms\Components\Grid::make(2)
+                            ->schema([
+                                Forms\Components\TextInput::make('latitude')
+                                    ->label('Latitude')
+                                    ->numeric()
+                                    ->required()
+                                    ->step(0.00000001)
+                                    ->reactive()
+                                    ->helperText('Klik peta atau input manual'),
+                                
+                                Forms\Components\TextInput::make('longitude')
+                                    ->label('Longitude')
+                                    ->numeric()
+                                    ->required()
+                                    ->step(0.00000001)
+                                    ->reactive()
+                                    ->helperText('Klik peta atau input manual'),
+                            ]),
+                        
+                        Forms\Components\TextInput::make('radius')
+                            ->label('Radius Geofencing (meter)')
+                            ->numeric()
+                            ->required()
+                            ->default(100)
+                            ->suffix('meter')
+                            ->helperText('Karyawan hanya bisa check-in dalam radius ini')
+                            ->minValue(5)
+                            ->maxValue(1000),
+                    ])
+                    ->columnSpan(2),
+                
                 Forms\Components\Textarea::make('description')
                     ->label('Deskripsi')
                     ->maxLength(65535)
                     ->columnSpanFull(),
-            ]);
+            ])
+            ->columns(2);
     }
 
     public static function table(Table $table): Table

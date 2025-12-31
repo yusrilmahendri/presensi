@@ -19,7 +19,7 @@ class LateCheckInNotification extends Notification implements ShouldQueue
     /**
      * Create a new notification instance.
      */
-    public function __construct(Attendance $attendance, int $lateMinutes)
+    public function __construct($attendance, $lateMinutes)
     {
         $this->attendance = $attendance;
         $this->lateMinutes = $lateMinutes;
@@ -63,3 +63,6 @@ class LateCheckInNotification extends Notification implements ShouldQueue
             'check_in_time' => $this->attendance->attendance_time->format('H:i'),
             'date' => $this->attendance->attendance_time->format('Y-m-d'),
             'message' => 'Anda terlambat check-in ' . $this->lateMinutes . ' menit',
+        ];
+    }
+}

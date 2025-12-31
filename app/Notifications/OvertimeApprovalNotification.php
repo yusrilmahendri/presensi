@@ -18,7 +18,7 @@ class OvertimeApprovalNotification extends Notification implements ShouldQueue
     /**
      * Create a new notification instance.
      */
-    public function __construct(Overtime $overtime, string $action = 'submitted')
+    public function __construct($overtime, $action)
     {
         $this->overtime = $overtime;
         $this->action = $action;
@@ -99,3 +99,5 @@ class OvertimeApprovalNotification extends Notification implements ShouldQueue
             'rejected' => 'Lembur Anda ditolak',
             default => 'Update lembur'
         };
+    }
+}

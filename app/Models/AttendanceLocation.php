@@ -37,11 +37,11 @@ class AttendanceLocation extends Model
     {
         $earthRadius = 6371000; // Earth radius in meters
 
-        $dLat = deg2rad($latitude - $this->latitude);
-        $dLon = deg2rad($longitude - $this->longitude);
+        $dLat = deg2rad($latitude - (float)$this->latitude);
+        $dLon = deg2rad($longitude - (float)$this->longitude);
 
         $a = sin($dLat / 2) * sin($dLat / 2) +
-             cos(deg2rad($this->latitude)) * cos(deg2rad($latitude)) *
+             cos(deg2rad((float)$this->latitude)) * cos(deg2rad($latitude)) *
              sin($dLon / 2) * sin($dLon / 2);
 
         $c = 2 * atan2(sqrt($a), sqrt(1 - $a));

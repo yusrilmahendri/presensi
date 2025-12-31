@@ -18,6 +18,16 @@ class AuditLogResource extends Resource
     protected static ?string $model = AuditLog::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->user()->role !== 'super_admin';
+    }
+    
+    public static function canViewAny(): bool
+    {
+        return auth()->user()->role !== 'super_admin';
+    }
 
     public static function form(Form $form): Form
     {

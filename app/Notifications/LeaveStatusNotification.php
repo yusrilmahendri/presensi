@@ -19,7 +19,7 @@ class LeaveStatusNotification extends Notification implements ShouldQueue
     /**
      * Create a new notification instance.
      */
-    public function __construct(Leave $leave, string $status, ?string $notes = null)
+    public function __construct($leave, $status, $notes = null)
     {
         $this->leave = $leave;
         $this->status = $status;
@@ -79,3 +79,6 @@ class LeaveStatusNotification extends Notification implements ShouldQueue
             'reason' => $this->leave->reason,
             'notes' => $this->notes,
             'message' => 'Permohonan cuti Anda telah ' . $this->status,
+        ];
+    }
+}
