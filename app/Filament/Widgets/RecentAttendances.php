@@ -15,6 +15,12 @@ class RecentAttendances extends BaseWidget
     
     protected static ?string $heading = 'Absensi Terbaru';
 
+    public static function canView(): bool
+    {
+        $user = auth()->user();
+        return $user && $user->isAdmin() && !$user->isSuperAdmin();
+    }
+
     public function table(Table $table): Table
     {
         return $table

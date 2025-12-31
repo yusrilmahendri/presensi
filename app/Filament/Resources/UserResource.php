@@ -10,6 +10,7 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Database\Eloquent\Builder;
 
 class UserResource extends Resource
 {
@@ -25,13 +26,50 @@ class UserResource extends Resource
 
     public static function shouldRegisterNavigation(): bool
     {
-        return auth()->check() && auth()->user()->isAdmin();
+        $user = auth()->user();
+        if (!$user) return false;
+        
+        // Super admin sees this as "Admin Accounts"
+        if ($user->isSuperAdmin()) {
+            static::$navigationLabel = 'Admin Bisnis';
+            static::$navigationGroup = 'Manajemen Super Admin';
+            static::$navigationSort = 2;
+            return true;
+        }
+        
+        // Regular admin sees employees
+        return $user->isAdmin();
+    }
+    
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+        
+        // Super admin only sees admin users
+        if (auth()->user()->isSuperAdmin()) {
+            return $query->where('role', 'admin');
+        }
+        
+        // Regular admin sees their organization's employees
+        return $query->where('role', 'karyawan');
     }
 
     public static function form(Form $form): Form
     {
+        $isSuperAdmin = auth()->user()->isSuperAdmin();
+        
         return $form
             ->schema([
+                // Organization selection (only for super admin)
+                Forms\Components\Select::make('organization_id')
+                    ->label('Bisnis')
+                    ->relationship('organization', 'name')
+                    ->searchable()
+                    ->preload()
+                    ->required()
+                    ->visible($isSuperAdmin)
+                    ->columnSpanFull(),
+                
                 Forms\Components\TextInput::make('name')
                     ->label('Nama Lengkap')
                     ->required()
@@ -39,23 +77,23 @@ class UserResource extends Resource
                     ->columnSpanFull(),
                 
                 Forms\Components\TextInput::make('username')
-                    ->label('Username (untuk Admin)')
+                    ->label('Username')
                     ->unique(ignoreRecord: true)
                     ->maxLength(255)
-                    ->visible(fn ($get) => $get('role') === 'admin')
-                    ->required(fn ($get) => $get('role') === 'admin'),
+                    ->visible(fn ($get) => $isSuperAdmin || $get('role') === 'admin')
+                    ->required(fn ($get) => $isSuperAdmin || $get('role') === 'admin'),
                 
                 Forms\Components\TextInput::make('nik')
                     ->label('NIK (untuk Karyawan)')
                     ->unique(ignoreRecord: true)
                     ->maxLength(255)
-                    ->visible(fn ($get) => $get('role') === 'karyawan'),
+                    ->visible(fn ($get) => !$isSuperAdmin && $get('role') === 'karyawan'),
                 
                 Forms\Components\TextInput::make('nip')
                     ->label('NIP (untuk Karyawan)')
                     ->unique(ignoreRecord: true)
                     ->maxLength(255)
-                    ->visible(fn ($get) => $get('role') === 'karyawan'),
+                    ->visible(fn ($get) => !$isSuperAdmin && $get('role') === 'karyawan'),
                 
                 Forms\Components\TextInput::make('email')
                     ->label('Email')
@@ -72,16 +110,19 @@ class UserResource extends Resource
                     )
                     ->dehydrated(fn ($state) => !empty($state))
                     ->required(fn (string $operation): bool => $operation === 'create')
-                    ->maxLength(255),
+                    ->maxLength(255)
+                    ->helperText($isSuperAdmin ? 'Password default untuk admin baru' : null),
                 
                 Forms\Components\Select::make('role')
                     ->label('Role')
-                    ->options([
+                    ->options($isSuperAdmin ? ['admin' => 'Admin Bisnis'] : [
                         'admin' => 'Admin',
                         'karyawan' => 'Karyawan',
                     ])
                     ->required()
-                    ->default('karyawan')
+                    ->default($isSuperAdmin ? 'admin' : 'karyawan')
+                    ->disabled($isSuperAdmin)
+                    ->dehydrated($isSuperAdmin) // Ensure value is submitted even when disabled
                     ->live()
                     ->afterStateUpdated(function ($state, callable $set) {
                         if ($state === 'admin') {
@@ -94,15 +135,23 @@ class UserResource extends Resource
                     ->relationship('shift', 'name')
                     ->searchable()
                     ->preload()
-                    ->visible(fn ($get) => $get('role') === 'karyawan')
-                    ->required(fn ($get) => $get('role') === 'karyawan'),
+                    ->visible(fn ($get) => !$isSuperAdmin && $get('role') === 'karyawan')
+                    ->required(fn ($get) => !$isSuperAdmin && $get('role') === 'karyawan'),
             ]);
     }
 
     public static function table(Table $table): Table
     {
+        $isSuperAdmin = auth()->user()->isSuperAdmin();
+        
         return $table
             ->columns([
+                Tables\Columns\TextColumn::make('organization.name')
+                    ->label('Bisnis')
+                    ->searchable()
+                    ->sortable()
+                    ->visible($isSuperAdmin),
+                
                 Tables\Columns\TextColumn::make('name')
                     ->label('Nama')
                     ->searchable()
@@ -116,26 +165,28 @@ class UserResource extends Resource
                     ->placeholder('-')
                     ->toggleable(),
                 
-                Tables\Columns\TextColumn::make('nik')
-                    ->label('NIK')
-                    ->searchable()
-                    ->sortable()
-                    ->placeholder('-')
-                    ->toggleable(),
-                
-                Tables\Columns\TextColumn::make('nip')
-                    ->label('NIP')
-                    ->searchable()
-                    ->sortable()
-                    ->placeholder('-')
-                    ->toggleable(),
-                
                 Tables\Columns\TextColumn::make('email')
                     ->label('Email')
                     ->searchable()
                     ->sortable()
                     ->icon('heroicon-m-envelope')
                     ->toggleable(),
+                
+                Tables\Columns\TextColumn::make('nik')
+                    ->label('NIK')
+                    ->searchable()
+                    ->sortable()
+                    ->placeholder('-')
+                    ->toggleable()
+                    ->visible(!$isSuperAdmin),
+                
+                Tables\Columns\TextColumn::make('nip')
+                    ->label('NIP')
+                    ->searchable()
+                    ->sortable()
+                    ->placeholder('-')
+                    ->toggleable()
+                    ->visible(!$isSuperAdmin),
                 
                 Tables\Columns\TextColumn::make('role')
                     ->label('Role')
@@ -145,19 +196,27 @@ class UserResource extends Resource
                         'karyawan' => 'success',
                         default => 'gray',
                     })
-                    ->sortable(),
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                        'admin' => 'Admin Bisnis',
+                        'karyawan' => 'Karyawan',
+                        default => $state,
+                    })
+                    ->sortable()
+                    ->visible(!$isSuperAdmin),
                 
                 Tables\Columns\TextColumn::make('shift.name')
                     ->label('Shift')
                     ->sortable()
                     ->placeholder('-')
-                    ->toggleable(),
+                    ->toggleable()
+                    ->visible(!$isSuperAdmin),
                 
                 Tables\Columns\TextColumn::make('attendances_count')
                     ->label('Jumlah Absen')
                     ->counts('attendances')
                     ->sortable()
-                    ->toggleable(),
+                    ->toggleable()
+                    ->visible(!$isSuperAdmin),
                 
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Dibuat')

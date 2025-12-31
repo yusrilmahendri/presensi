@@ -29,7 +29,8 @@ class LeaveResource extends Resource
 
     public static function shouldRegisterNavigation(): bool
     {
-        return auth()->check() && auth()->user()->isAdmin();
+        $user = auth()->user();
+        return $user && $user->isAdmin() && !$user->isSuperAdmin();
     }
 
     public static function form(Form $form): Form

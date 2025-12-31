@@ -2,17 +2,21 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToOrganization;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class AttendanceLocation extends Model
 {
+    use BelongsToOrganization;
+
     protected $fillable = [
         'name',
         'latitude',
         'longitude',
         'radius',
         'description',
+        'organization_id',
     ];
 
     protected $casts = [

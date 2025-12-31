@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToOrganization;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Attendance extends Model
 {
+    use BelongsToOrganization;
+
     protected $fillable = [
         'user_id',
         'shift_id',
@@ -17,6 +20,7 @@ class Attendance extends Model
         'longitude',
         'photo',
         'notes',
+        'organization_id',
     ];
 
     protected $casts = [

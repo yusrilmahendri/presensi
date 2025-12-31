@@ -14,6 +14,12 @@ class DashboardStats extends BaseWidget
     
     protected int | string | array $columnSpan = 'full';
     
+    public static function canView(): bool
+    {
+        $user = auth()->user();
+        return $user && $user->isAdmin() && !$user->isSuperAdmin();
+    }
+    
     protected function getStats(): array
     {
         $today = Carbon::today();

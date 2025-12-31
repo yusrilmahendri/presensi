@@ -24,6 +24,7 @@ class User extends Authenticatable implements FilamentUser
         'password',
         'shift_id',
         'role',
+        'organization_id',
     ];
 
     protected $hidden = [
@@ -44,6 +45,11 @@ class User extends Authenticatable implements FilamentUser
         return $this->belongsTo(Shift::class);
     }
 
+    public function organization(): BelongsTo
+    {
+        return $this->belongsTo(Organization::class);
+    }
+
     public function attendances(): HasMany
     {
         return $this->hasMany(Attendance::class);
@@ -52,6 +58,26 @@ class User extends Authenticatable implements FilamentUser
     public function leaves(): HasMany
     {
         return $this->hasMany(Leave::class);
+    }
+
+    public function department(): BelongsTo
+    {
+        return $this->belongsTo(Department::class);
+    }
+
+    public function overtimes(): HasMany
+    {
+        return $this->hasMany(Overtime::class);
+    }
+
+    public function auditLogs(): HasMany
+    {
+        return $this->hasMany(AuditLog::class);
+    }
+
+    public function isSuperAdmin(): bool
+    {
+        return $this->role === 'super_admin';
     }
 
     public function isAdmin(): bool
@@ -66,19 +92,8 @@ class User extends Authenticatable implements FilamentUser
 
     public function canAccessPanel(Panel $panel): bool
     {
-        $hasAccess = $this->role === 'admin';
-        
-        // Log untuk debugging di production
-        \Log::info('User Panel Access Check', [
-            'user_id' => $this->id,
-            'name' => $this->name,
-            'email' => $this->email,
-            'role' => $this->role,
-            'has_access' => $hasAccess,
-            'panel_id' => $panel->getId(),
-        ]);
-        
-        return $hasAccess;
+        // Super admin dan admin can access panel
+        return $this->role === 'super_admin' || $this->role === 'admin';
     }
 }
 

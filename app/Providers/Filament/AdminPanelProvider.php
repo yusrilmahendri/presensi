@@ -33,6 +33,7 @@ class AdminPanelProvider extends PanelProvider
             ->darkMode(false)
             ->sidebarCollapsibleOnDesktop()
             ->navigationGroups([
+                'Manajemen Super Admin',
                 'Absensi',
                 'Manajemen User',
                 'Pengaturan',

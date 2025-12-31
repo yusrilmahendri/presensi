@@ -2,16 +2,20 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToOrganization;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Shift extends Model
 {
+    use BelongsToOrganization;
+
     protected $fillable = [
         'name',
         'start_time',
         'end_time',
         'description',
+        'organization_id',
     ];
 
     // No casts needed for TIME columns - they are stored as strings

@@ -14,6 +14,12 @@ class RecentLeaveApprovals extends BaseWidget
     
     protected int | string | array $columnSpan = 'full';
 
+    public static function canView(): bool
+    {
+        $user = auth()->user();
+        return $user && $user->isAdmin() && !$user->isSuperAdmin();
+    }
+
     public function table(Table $table): Table
     {
         return $table

@@ -11,7 +11,8 @@ class AuthController extends Controller
     public function showLoginForm()
     {
         if (Auth::check()) {
-            if (Auth::user()->isAdmin()) {
+            $user = Auth::user();
+            if ($user->isSuperAdmin() || $user->isAdmin()) {
                 return redirect('/admin');
             }
             return redirect()->route('karyawan.dashboard');
@@ -45,7 +46,7 @@ class AuthController extends Controller
         $request->session()->regenerate();
 
         // Redirect berdasarkan role
-        if ($user->isAdmin()) {
+        if ($user->isSuperAdmin() || $user->isAdmin()) {
             return redirect()->intended('/admin');
         }
 

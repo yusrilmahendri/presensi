@@ -10,6 +10,12 @@ class LeaveStats extends BaseWidget
 {
     protected static ?int $sort = 2;
 
+    public static function canView(): bool
+    {
+        $user = auth()->user();
+        return $user && $user->isAdmin() && !$user->isSuperAdmin();
+    }
+
     protected function getStats(): array
     {
         $totalLeaves = Leave::count();
