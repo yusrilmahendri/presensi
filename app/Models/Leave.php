@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -30,6 +31,11 @@ class Leave extends Model
         'approved_at' => 'datetime',
     ];
 
+    protected $appends = [
+        'type_label',
+        'status_label',
+    ];
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
@@ -55,23 +61,27 @@ class Leave extends Model
         return $this->status === 'rejected';
     }
 
-    public function getStatusLabelAttribute(): string
+    protected function statusLabel(): Attribute
     {
-        return match($this->status) {
-            'pending' => 'Menunggu',
-            'approved' => 'Disetujui',
-            'rejected' => 'Ditolak',
-            default => $this->status,
-        };
+        return Attribute::make(
+            get: fn () => match($this->status) {
+                'pending' => 'Menunggu',
+                'approved' => 'Disetujui',
+                'rejected' => 'Ditolak',
+                default => $this->status,
+            }
+        );
     }
 
-    public function getTypeLabelAttribute(): string
+    protected function typeLabel(): Attribute
     {
-        return match($this->type) {
-            'sakit' => 'Sakit',
-            'izin' => 'Izin',
-            'cuti' => 'Cuti',
-            default => $this->type,
-        };
+        return Attribute::make(
+            get: fn () => match($this->type) {
+                'sakit' => 'Sakit',
+                'izin' => 'Izin',
+                'cuti' => 'Cuti',
+                default => $this->type,
+            }
+        );
     }
 }

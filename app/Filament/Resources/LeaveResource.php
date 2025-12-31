@@ -10,6 +10,7 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\Filter;
 use Filament\Tables\Actions\Action;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
@@ -22,9 +23,9 @@ class LeaveResource extends Resource
     
     protected static ?string $navigationLabel = 'Pengajuan Izin';
     
-    protected static ?string $navigationGroup = 'Manajemen User';
+    protected static ?string $navigationGroup = 'Absensi';
     
-    protected static ?int $navigationSort = 3;
+    protected static ?int $navigationSort = 2;
 
     public static function shouldRegisterNavigation(): bool
     {
@@ -180,18 +181,83 @@ class LeaveResource extends Resource
                         'pending' => 'Menunggu',
                         'approved' => 'Disetujui',
                         'rejected' => 'Ditolak',
-                    ]),
+                    ])
+                    ->multiple(),
                 SelectFilter::make('type')
                     ->label('Jenis')
                     ->options([
                         'sakit' => 'Sakit',
                         'izin' => 'Izin',
                         'cuti' => 'Cuti',
-                    ]),
+                    ])
+                    ->multiple(),
                 SelectFilter::make('user_id')
                     ->label('Karyawan')
-                    ->relationship('user', 'name'),
+                    ->relationship('user', 'name')
+                    ->searchable()
+                    ->preload(),
+                Filter::make('created_at')
+                    ->form([
+                        Forms\Components\DatePicker::make('created_from')
+                            ->label('Diajukan Dari')
+                            ->placeholder('Pilih tanggal'),
+                        Forms\Components\DatePicker::make('created_until')
+                            ->label('Sampai')
+                            ->placeholder('Pilih tanggal'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['created_from'],
+                                fn (Builder $query, $date): Builder => $query->whereDate('created_at', '>=', $date),
+                            )
+                            ->when(
+                                $data['created_until'],
+                                fn (Builder $query, $date): Builder => $query->whereDate('created_at', '<=', $date),
+                            );
+                    })
+                    ->indicateUsing(function (array $data): array {
+                        $indicators = [];
+                        if ($data['created_from'] ?? null) {
+                            $indicators[] = 'Diajukan dari ' . \Carbon\Carbon::parse($data['created_from'])->format('d M Y');
+                        }
+                        if ($data['created_until'] ?? null) {
+                            $indicators[] = 'Sampai ' . \Carbon\Carbon::parse($data['created_until'])->format('d M Y');
+                        }
+                        return $indicators;
+                    }),
+                Filter::make('start_date')
+                    ->form([
+                        Forms\Components\DatePicker::make('date_from')
+                            ->label('Periode Dari')
+                            ->placeholder('Pilih tanggal'),
+                        Forms\Components\DatePicker::make('date_until')
+                            ->label('Sampai')
+                            ->placeholder('Pilih tanggal'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['date_from'],
+                                fn (Builder $query, $date): Builder => $query->whereDate('start_date', '>=', $date),
+                            )
+                            ->when(
+                                $data['date_until'],
+                                fn (Builder $query, $date): Builder => $query->whereDate('end_date', '<=', $date),
+                            );
+                    })
+                    ->indicateUsing(function (array $data): array {
+                        $indicators = [];
+                        if ($data['date_from'] ?? null) {
+                            $indicators[] = 'Periode dari ' . \Carbon\Carbon::parse($data['date_from'])->format('d M Y');
+                        }
+                        if ($data['date_until'] ?? null) {
+                            $indicators[] = 'Sampai ' . \Carbon\Carbon::parse($data['date_until'])->format('d M Y');
+                        }
+                        return $indicators;
+                    }),
             ])
+            ->filtersFormColumns(2)
             ->actions([
                 Action::make('approve')
                     ->label('Setujui')
@@ -211,6 +277,7 @@ class LeaveResource extends Resource
                             'admin_notes' => $data['admin_notes'] ?? null,
                         ]);
                     })
+                    ->successNotificationTitle('Pengajuan izin berhasil disetujui')
                     ->visible(fn (Leave $record): bool => $record->isPending()),
                 Action::make('reject')
                     ->label('Tolak')
@@ -231,6 +298,7 @@ class LeaveResource extends Resource
                             'admin_notes' => $data['admin_notes'],
                         ]);
                     })
+                    ->successNotificationTitle('Pengajuan izin berhasil ditolak')
                     ->visible(fn (Leave $record): bool => $record->isPending()),
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make()
@@ -239,6 +307,61 @@ class LeaveResource extends Resource
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\BulkAction::make('approve_selected')
+                        ->label('Setujui Terpilih')
+                        ->icon('heroicon-o-check-circle')
+                        ->color('success')
+                        ->requiresConfirmation()
+                        ->modalHeading('Setujui Pengajuan Izin Terpilih')
+                        ->modalDescription('Apakah Anda yakin ingin menyetujui semua pengajuan izin yang dipilih?')
+                        ->form([
+                            Forms\Components\Textarea::make('admin_notes')
+                                ->label('Catatan (Opsional)')
+                                ->helperText('Catatan ini akan diterapkan ke semua pengajuan yang dipilih')
+                                ->maxLength(65535),
+                        ])
+                        ->action(function (\Illuminate\Database\Eloquent\Collection $records, array $data) {
+                            $records->each(function (Leave $record) use ($data) {
+                                if ($record->isPending()) {
+                                    $record->update([
+                                        'status' => 'approved',
+                                        'approved_by' => Auth::id(),
+                                        'approved_at' => now(),
+                                        'admin_notes' => $data['admin_notes'] ?? null,
+                                    ]);
+                                }
+                            });
+                        })
+                        ->deselectRecordsAfterCompletion()
+                        ->successNotificationTitle('Pengajuan berhasil disetujui'),
+                    Tables\Actions\BulkAction::make('reject_selected')
+                        ->label('Tolak Terpilih')
+                        ->icon('heroicon-o-x-circle')
+                        ->color('danger')
+                        ->requiresConfirmation()
+                        ->modalHeading('Tolak Pengajuan Izin Terpilih')
+                        ->modalDescription('Apakah Anda yakin ingin menolak semua pengajuan izin yang dipilih?')
+                        ->form([
+                            Forms\Components\Textarea::make('admin_notes')
+                                ->label('Alasan Penolakan')
+                                ->required()
+                                ->helperText('Catatan ini akan diterapkan ke semua pengajuan yang dipilih')
+                                ->maxLength(65535),
+                        ])
+                        ->action(function (\Illuminate\Database\Eloquent\Collection $records, array $data) {
+                            $records->each(function (Leave $record) use ($data) {
+                                if ($record->isPending()) {
+                                    $record->update([
+                                        'status' => 'rejected',
+                                        'approved_by' => Auth::id(),
+                                        'approved_at' => now(),
+                                        'admin_notes' => $data['admin_notes'],
+                                    ]);
+                                }
+                            });
+                        })
+                        ->deselectRecordsAfterCompletion()
+                        ->successNotificationTitle('Pengajuan berhasil ditolak'),
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ])

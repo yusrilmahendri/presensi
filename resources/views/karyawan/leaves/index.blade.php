@@ -45,6 +45,23 @@
             background-color: #dc3545;
             color: #fff;
         }
+        /* Modal styles */
+        .modal-body {
+            padding: 1.5rem !important;
+            min-height: 200px;
+        }
+        .modal-dialog {
+            max-width: 600px;
+        }
+        .modal-content {
+            border-radius: 10px;
+        }
+        .table-borderless td {
+            padding: 0.5rem 0;
+            vertical-align: top;
+        }
+            color: #fff;
+        }
     </style>
 </head>
 <body>
@@ -84,7 +101,7 @@
     <div class="container mt-4">
         <!-- Form Pengajuan -->
         <div class="card">
-            <div class="card-header bg-primary text-white">
+            <div class="card-header text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
                 <h5 class="mb-0"><i class="fas fa-file-alt"></i> Ajukan Izin Baru</h5>
             </div>
             <div class="card-body">
@@ -206,64 +223,83 @@
                                             </button>
                                         </td>
                                     </tr>
-
-                                    <!-- Detail Modal -->
-                                    <div class="modal fade" id="detailModal{{ $leave->id }}" tabindex="-1">
-                                        <div class="modal-dialog">
-                                            <div class="modal-content">
-                                                <div class="modal-header">
-                                                    <h5 class="modal-title">Detail Pengajuan Izin</h5>
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                                </div>
-                                                <div class="modal-body">
-                                                    <table class="table table-borderless">
-                                                        <tr>
-                                                            <td width="150"><strong>Jenis Izin</strong></td>
-                                                            <td>: {{ $leave->type_label }}</td>
-                                                        </tr>
-                                                        <tr>
-                                                            <td><strong>Periode</strong></td>
-                                                            <td>: {{ $leave->start_date->format('d M Y') }} s/d {{ $leave->end_date->format('d M Y') }}</td>
-                                                        </tr>
-                                                        <tr>
-                                                            <td><strong>Total Hari</strong></td>
-                                                            <td>: {{ $leave->total_days }} hari</td>
-                                                        </tr>
-                                                        <tr>
-                                                            <td><strong>Alasan</strong></td>
-                                                            <td>: {{ $leave->reason }}</td>
-                                                        </tr>
-                                                        <tr>
-                                                            <td><strong>Status</strong></td>
-                                                            <td>: {{ $leave->status_label }}</td>
-                                                        </tr>
-                                                        @if($leave->attachment)
-                                                            <tr>
-                                                                <td><strong>Lampiran</strong></td>
-                                                                <td>: <a href="{{ asset('storage/' . $leave->attachment) }}" target="_blank">Lihat File</a></td>
-                                                            </tr>
-                                                        @endif
-                                                        @if($leave->admin_notes)
-                                                            <tr>
-                                                                <td><strong>Catatan Admin</strong></td>
-                                                                <td>: {{ $leave->admin_notes }}</td>
-                                                            </tr>
-                                                        @endif
-                                                        @if($leave->approved_by)
-                                                            <tr>
-                                                                <td><strong>Disetujui Oleh</strong></td>
-                                                                <td>: {{ $leave->approvedBy->name ?? '-' }}</td>
-                                                            </tr>
-                                                        @endif
-                                                    </table>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
                                 @endforeach
                             </tbody>
                         </table>
                     </div>
+
+                    <!-- Modals - Outside of table -->
+                    @foreach($leaves as $leave)
+                        <div class="modal fade" id="detailModal{{ $leave->id }}" tabindex="-1" aria-labelledby="detailModalLabel{{ $leave->id }}" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content">
+                                    <div class="modal-header text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                                        <h5 class="modal-title" id="detailModalLabel{{ $leave->id }}">
+                                            <i class="fas fa-info-circle"></i> Detail Pengajuan Izin
+                                        </h5>
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <table class="table table-borderless">
+                                            <tbody>
+                                                <tr>
+                                                    <td width="150"><strong>Jenis Izin</strong></td>
+                                                    <td>: {{ $leave->type_label }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><strong>Periode</strong></td>
+                                                    <td>: {{ $leave->start_date->format('d M Y') }} s/d {{ $leave->end_date->format('d M Y') }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><strong>Total Hari</strong></td>
+                                                    <td>: {{ $leave->total_days }} hari</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><strong>Alasan</strong></td>
+                                                    <td>: {{ $leave->reason }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><strong>Status</strong></td>
+                                                    <td>: 
+                                                        @if($leave->status === 'pending')
+                                                            <span class="badge bg-warning text-dark">Menunggu</span>
+                                                        @elseif($leave->status === 'approved')
+                                                            <span class="badge bg-success">Disetujui</span>
+                                                        @else
+                                                            <span class="badge bg-danger">Ditolak</span>
+                                                        @endif
+                                                    </td>
+                                                </tr>
+                                                @if($leave->attachment)
+                                                    <tr>
+                                                        <td><strong>Lampiran</strong></td>
+                                                        <td>: <a href="{{ asset('storage/' . $leave->attachment) }}" target="_blank" class="btn btn-sm btn-info"><i class="fas fa-paperclip"></i> Lihat File</a></td>
+                                                    </tr>
+                                                @endif
+                                                @if($leave->admin_notes)
+                                                    <tr>
+                                                        <td><strong>Catatan Admin</strong></td>
+                                                        <td>: {{ $leave->admin_notes }}</td>
+                                                    </tr>
+                                                @endif
+                                                @if($leave->approved_by)
+                                                    <tr>
+                                                        <td><strong>Disetujui Oleh</strong></td>
+                                                        <td>: {{ $leave->approvedBy->name ?? '-' }}</td>
+                                                    </tr>
+                                                @endif
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                            <i class="fas fa-times"></i> Tutup
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
                 @else
                     <p class="text-muted text-center">Belum ada riwayat pengajuan izin.</p>
                 @endif
@@ -301,6 +337,26 @@
 
         startDate.addEventListener('change', calculateDays);
         endDate.addEventListener('change', calculateDays);
+
+        // Ensure modals work properly
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize all modals
+            var modals = document.querySelectorAll('.modal');
+            modals.forEach(function(modal) {
+                new bootstrap.Modal(modal, {
+                    backdrop: true,
+                    keyboard: true,
+                    focus: true
+                });
+            });
+
+            // Debug: Log when modal is shown
+            modals.forEach(function(modal) {
+                modal.addEventListener('show.bs.modal', function (event) {
+                    console.log('Modal opened:', this.id);
+                });
+            });
+        });
     </script>
 </body>
 </html>

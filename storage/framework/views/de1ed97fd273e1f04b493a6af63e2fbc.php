@@ -17,7 +17,7 @@
     
     <style>
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
             min-height: 100vh;
             padding: 20px 0;
         }
@@ -200,8 +200,8 @@
     <!-- Footer -->
     <footer style="background: rgba(255, 255, 255, 0.95); padding: 20px 0; margin-top: 40px; text-align: center; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); border-radius: 15px;">
         <div style="color: #666; font-size: 0.85em;">
-            &copy; 2025 Created by <strong style="color: #667eea;">Yusril Mahendri</strong> 
-            <a href="https://yusrilmahendri.site" target="_blank" style="color: #764ba2; text-decoration: none;">yusrilmahendri.site</a>
+            &copy; 2025 Created by <strong style="color: #2563eb;">Yusril Mahendri</strong> 
+            <a href="https://yusrilmahendri.site" target="_blank" style="color: #1d4ed8; text-decoration: none;">yusrilmahendri.site</a>
         </div>
     </footer>
 
@@ -354,8 +354,8 @@
                 
                 // Add circle to show accuracy
                 L.circle([lat, lng], {
-                    color: '#667eea',
-                    fillColor: '#764ba2',
+                    color: '#2563eb',
+                    fillColor: '#1d4ed8',
                     fillOpacity: 0.2,
                     radius: 50
                 }).addTo(map);
@@ -410,18 +410,18 @@
                                 <h5 style="color: #28a745; margin-bottom: 15px;">${data.message}</h5>
                                 <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; margin: 15px 0;">
                                     <div style="margin-bottom: 10px;">
-                                        <strong style="color: #667eea;">⏰ Waktu:</strong>
+                                        <strong style="color: #2563eb;">⏰ Waktu:</strong>
                                         <div style="font-size: 1.2em; color: #333; margin-top: 5px;">${data.data.attendance_time}</div>
                                     </div>
                                     <div>
-                                        <strong style="color: #667eea;">📍 Lokasi:</strong>
+                                        <strong style="color: #2563eb;">📍 Lokasi:</strong>
                                         <div style="font-size: 1.1em; color: #333; margin-top: 5px;">${data.data.location}</div>
                                     </div>
                                 </div>
                             </div>
                         `,
                         confirmButtonText: 'OK',
-                        confirmButtonColor: '#667eea'
+                        confirmButtonColor: '#2563eb'
                     });
                     
                     // Reset form (keep logged in, just reset attendance form)
