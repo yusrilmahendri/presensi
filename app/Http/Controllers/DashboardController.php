@@ -125,4 +125,48 @@ class DashboardController extends Controller
         
         return $pdf->download($fileName);
     }
+
+    public function profile()
+    {
+        $user = Auth::user();
+
+        if ($user->role !== 'karyawan') {
+            abort(403, 'Unauthorized');
+        }
+
+        return view('karyawan.profile', compact('user'));
+    }
+
+    public function updateProfile(Request $request)
+    {
+        $user = Auth::user();
+
+        if ($user->role !== 'karyawan') {
+            abort(403, 'Unauthorized');
+        }
+
+        $validated = $request->validate([
+            'username' => 'nullable|string|max:255|unique:users,username,' . $user->id,
+            'password' => 'nullable|string|min:8|confirmed',
+        ]);
+
+        $updated = false;
+
+        if ($request->filled('username') && $request->username !== $user->username) {
+            $user->username = $request->username;
+            $updated = true;
+        }
+
+        if ($request->filled('password')) {
+            $user->password = bcrypt($request->password);
+            $updated = true;
+        }
+
+        if ($updated) {
+            $user->save();
+            return redirect()->route('karyawan.profile')->with('success', 'Profile berhasil diperbarui!');
+        }
+
+        return redirect()->route('karyawan.profile')->with('info', 'Tidak ada perubahan data.');
+    }
 }

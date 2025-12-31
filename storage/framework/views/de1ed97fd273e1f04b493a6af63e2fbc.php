@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="csrf-token" content="<?php echo e(csrf_token()); ?>">
     <title>Sistem Presensi</title>
     
     <!-- Bootstrap CSS -->
@@ -127,16 +127,16 @@
             <div class="d-flex justify-content-between align-items-center mb-4 header-section">
                 <h2 class="mb-0">Sistem Presensi</h2>
                 <div class="header-actions">
-                    <a href="{{ route('karyawan.dashboard') }}" class="btn btn-sm btn-outline-primary">Dashboard</a>
-                    <a href="{{ route('karyawan.profile') }}" class="btn btn-sm btn-outline-secondary">Profile</a>
-                    <form method="POST" action="{{ route('karyawan.logout') }}" class="d-inline">
-                        @csrf
+                    <a href="<?php echo e(route('karyawan.dashboard')); ?>" class="btn btn-sm btn-outline-primary">Dashboard</a>
+                    <a href="<?php echo e(route('karyawan.profile')); ?>" class="btn btn-sm btn-outline-secondary">Profile</a>
+                    <form method="POST" action="<?php echo e(route('karyawan.logout')); ?>" class="d-inline">
+                        <?php echo csrf_field(); ?>
                         <button type="submit" class="btn btn-sm btn-outline-danger">Logout</button>
                     </form>
                 </div>
             </div>
             <p class="text-center text-muted mb-4">
-                Logged in as: <strong>{{ $user->name }}</strong> ({{ $user->email }})
+                Logged in as: <strong><?php echo e($user->name); ?></strong> (<?php echo e($user->email); ?>)
             </p>
             
             <form id="attendanceForm">
@@ -389,7 +389,7 @@
                     type: document.querySelector('input[name="type"]:checked').value
                 };
 
-                const response = await fetch('{{ route("attendance.store") }}', {
+                const response = await fetch('<?php echo e(route("attendance.store")); ?>', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -436,7 +436,7 @@
                     
                     // Optionally redirect to dashboard after successful attendance
                     setTimeout(() => {
-                        window.location.href = '{{ route("karyawan.dashboard") }}';
+                        window.location.href = '<?php echo e(route("karyawan.dashboard")); ?>';
                     }, 2000);
                 } else {
                     await Swal.fire({
@@ -468,3 +468,4 @@
 </body>
 </html>
 
+<?php /**PATH /Users/mac/Documents/code/web/presensi/resources/views/attendance/index.blade.php ENDPATH**/ ?>

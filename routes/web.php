@@ -26,6 +26,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('karyawan.logout');
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('karyawan.dashboard');
     
+    // Profile routes for karyawan
+    Route::get('/profile', [DashboardController::class, 'profile'])->name('karyawan.profile');
+    Route::put('/profile', [DashboardController::class, 'updateProfile'])->name('karyawan.profile.update');
+    
     // Export routes for karyawan
     Route::get('/dashboard/export-excel', [DashboardController::class, 'exportExcel'])->name('karyawan.export.excel');
     Route::get('/dashboard/export-pdf', [DashboardController::class, 'exportPdf'])->name('karyawan.export.pdf');

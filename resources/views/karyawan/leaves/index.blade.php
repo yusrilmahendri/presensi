@@ -66,6 +66,9 @@
                         <a class="nav-link active" href="{{ route('karyawan.leaves.index') }}">Pengajuan Izin</a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" href="{{ route('karyawan.profile') }}">Profile</a>
+                    </li>
+                    <li class="nav-item">
                         <form method="POST" action="{{ route('karyawan.logout') }}" class="d-inline">
                             @csrf
                             <button type="submit" class="btn btn-link nav-link" style="border: none; background: none; color: white !important;">
