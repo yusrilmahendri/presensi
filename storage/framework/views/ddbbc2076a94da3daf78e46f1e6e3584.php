@@ -2,7 +2,7 @@
 
 $__newAttributes = [];
 $__propNames = \Illuminate\View\ComponentAttributeBag::extractPropNames(([
-    'tag' => 'td',
+    'notification',
 ]));
 
 foreach ($attributes->all() as $__key => $__value) {
@@ -19,7 +19,7 @@ unset($__propNames);
 unset($__newAttributes);
 
 foreach (array_filter(([
-    'tag' => 'td',
+    'notification',
 ]), 'is_string', ARRAY_FILTER_USE_KEY) as $__key => $__value) {
     $$__key = $$__key ?? $__value;
 }
@@ -32,12 +32,17 @@ foreach ($attributes->all() as $__key => $__value) {
 
 unset($__defined_vars, $__key, $__value); ?>
 
-<<?php echo e($tag); ?>
-
-    <?php echo e($attributes->class(['fi-ta-cell p-0 first-of-type:ps-1 last-of-type:pe-1 sm:first-of-type:ps-3 sm:last-of-type:pe-3'])); ?>
+<div
+    x-data="notificationComponent({ notification: <?php echo \Illuminate\Support\Js::from($notification->toArray())->toHtml() ?> })"
+    <?php echo e($attributes
+            ->merge([
+                'wire:key' => "{$this->getId()}.notifications.{$notification->getId()}",
+                'x-on:close-notification.window' => "if (\$event.detail.id == '{$notification->getId()}') close()",
+            ], escape: false)
+            ->class(['pointer-events-auto invisible'])); ?>
 
 >
     <?php echo e($slot); ?>
 
-</<?php echo e($tag); ?>>
-<?php /**PATH /Users/mac/Documents/code/web/presensi/vendor/filament/tables/resources/views/components/cell.blade.php ENDPATH**/ ?>
+</div>
+<?php /**PATH /Users/mac/Documents/code/web/presensi/vendor/filament/notifications/resources/views/components/notification.blade.php ENDPATH**/ ?>
