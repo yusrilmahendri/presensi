@@ -3218,3 +3218,11 @@
 #46 /Users/mac/Documents/code/web/presensi/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php(23): require_once('/Users/mac/Docu...')
 #47 {main}
 "} 
+[2025-12-31 00:55:05] local.INFO: User Panel Access Check {"user_id":1,"name":"Administrator","email":"admin@presensi.com","role":"admin","has_access":true,"panel_id":"admin"} 
+[2025-12-31 00:55:13] local.INFO: User Panel Access Check {"user_id":1,"name":"Administrator","email":"admin@presensi.com","role":"admin","has_access":true,"panel_id":"admin"} 
+[2025-12-31 00:55:15] local.INFO: User Panel Access Check {"user_id":1,"name":"Administrator","email":"admin@presensi.com","role":"admin","has_access":true,"panel_id":"admin"} 
+[2025-12-31 00:55:22] local.INFO: User Panel Access Check {"user_id":1,"name":"Administrator","email":"admin@presensi.com","role":"admin","has_access":true,"panel_id":"admin"} 
+[2025-12-31 00:55:26] local.INFO: User Panel Access Check {"user_id":1,"name":"Administrator","email":"admin@presensi.com","role":"admin","has_access":true,"panel_id":"admin"} 
+[2025-12-31 00:55:31] local.INFO: User Panel Access Check {"user_id":1,"name":"Administrator","email":"admin@presensi.com","role":"admin","has_access":true,"panel_id":"admin"} 
+[2025-12-31 00:55:43] local.INFO: User Panel Access Check {"user_id":1,"name":"Administrator","email":"admin@presensi.com","role":"admin","has_access":true,"panel_id":"admin"} 
+[2025-12-31 00:55:45] local.INFO: User Panel Access Check {"user_id":1,"name":"Administrator","email":"admin@presensi.com","role":"admin","has_access":true,"panel_id":"admin"} 

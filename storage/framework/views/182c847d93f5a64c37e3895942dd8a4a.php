@@ -397,7 +397,7 @@
                     <i class="fas fa-user-circle"></i>
                 </div>
                 <h2>Login Sistem Presensi</h2>
-               <p>Selamat datang! Silakan masuk dengan akun Anda.</p>
+                <p>Admin & Karyawan - Silakan masuk dengan akun Anda.</p>
             </div>
 
             <div class="login-body">
@@ -416,7 +416,7 @@
 
                     <div class="mb-3">
                         <label for="login" class="form-label">
-                            <i class="fas fa-user me-2"></i>Username / NIK / NIP
+                            <i class="fas fa-user me-2"></i>Username / NIK / NIP / Email
                         </label>
                         <div class="input-group-icon">
                             <i class="fas fa-user"></i>
@@ -434,7 +434,7 @@ unset($__errorArgs, $__bag); ?>"
                                    value="<?php echo e(old('login')); ?>" 
                                    required 
                                    autofocus
-                                   placeholder="Masukkan username, NIK, atau NIP">
+                                   placeholder="Username (admin) / NIK / NIP / Email">
                             <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php $__errorArgs = ['login'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
