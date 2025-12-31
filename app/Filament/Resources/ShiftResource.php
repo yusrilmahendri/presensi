@@ -22,6 +22,11 @@ class ShiftResource extends Resource
     
     protected static ?int $navigationSort = 1;
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->check() && auth()->user()->isAdmin();
+    }
+
     public static function form(Form $form): Form
     {
         return $form

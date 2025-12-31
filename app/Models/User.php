@@ -64,7 +64,19 @@ class User extends Authenticatable
 
     public function canAccessPanel(\Filament\Panel $panel): bool
     {
-        return $this->role === 'admin';
+        $hasAccess = $this->role === 'admin';
+        
+        // Log untuk debugging di production
+        \Log::info('User Panel Access Check', [
+            'user_id' => $this->id,
+            'name' => $this->name,
+            'email' => $this->email,
+            'role' => $this->role,
+            'has_access' => $hasAccess,
+            'panel_id' => $panel->getId(),
+        ]);
+        
+        return $hasAccess;
     }
 }
 
