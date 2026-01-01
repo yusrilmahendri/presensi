@@ -49,8 +49,8 @@ class DashboardController extends Controller
             ->where('attendance_time', '>=', $thisWeek)
             ->count();
 
-        // Dynamic greeting based on time
-        $hour = Carbon::now()->hour;
+        // Dynamic greeting based on time (Jakarta timezone)
+        $hour = Carbon::now('Asia/Jakarta')->hour;
         if ($hour >= 0 && $hour < 11) {
             $greeting = 'Selamat Pagi';
         } elseif ($hour >= 11 && $hour < 15) {

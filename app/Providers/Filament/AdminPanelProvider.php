@@ -29,14 +29,22 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin')
-            ->brandName('Sistem Presensi')
+            ->brandName(function () {
+                $user = auth()->user();
+                if ($user && $user->organization) {
+                    return $user->organization->name;
+                }
+                return 'Sistem Presensi';
+            })
             ->darkMode(false)
             ->sidebarCollapsibleOnDesktop()
             ->navigationGroups([
                 'Manajemen Super Admin',
                 'Absensi',
+                'Laporan',
                 'Manajemen User',
                 'Pengaturan',
+                'Bantuan',
             ])
             ->globalSearchKeyBindings(['command+k', 'ctrl+k'])
             ->colors([

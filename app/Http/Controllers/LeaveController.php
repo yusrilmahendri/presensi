@@ -23,7 +23,7 @@ class LeaveController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return view('karyawan.leaves.index', compact('leaves'));
+        return view('karyawan.leaves.index', compact('leaves', 'user'));
     }
 
     public function store(Request $request)
