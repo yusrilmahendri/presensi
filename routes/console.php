@@ -26,6 +26,12 @@ Schedule::command('attendance:send-checkout-reminder')
     ->between('14:00', '18:00')
     ->description('Send check-out reminders before shift ends');
 
+// Send reminder for employees who forgot to check-out after shift ends
+Schedule::command('attendance:send-late-checkout-reminder')
+    ->everyFifteenMinutes()
+    ->between('15:00', '20:00')
+    ->description('Send urgent reminders for late check-out');
+
 // Send weekly summary to admins
 Schedule::command('attendance:send-weekly-summary')
     ->weeklyOn(1, '08:00') // Every Monday at 8 AM

@@ -62,6 +62,15 @@ class UserResource extends Resource
         return $query->whereRaw('1 = 0');
     }
 
+    protected static function getEnabledModes(): array
+    {
+        $user = auth()->user();
+        if (!$user || !$user->organization) {
+            return ['shift']; // Default fallback
+        }
+        return $user->organization->getEnabledModes();
+    }
+
     public static function form(Form $form): Form
     {
         $isSuperAdmin = auth()->user()->isSuperAdmin();
@@ -141,15 +150,47 @@ class UserResource extends Resource
                 
                 Forms\Components\Select::make('work_type')
                     ->label('Jenis Kerja')
-                    ->options([
-                        'shift' => '🕒 Shift - Absen berdasarkan jadwal shift',
-                        'working_hours' => '⏰ Working Hours - Absen fleksibel dengan jam kerja minimum',
-                    ])
-                    ->default('shift')
-                    ->required()
+                    ->options(function () use ($isSuperAdmin) {
+                        if ($isSuperAdmin) return [];
+                        
+                        $enabledModes = static::getEnabledModes();
+                        
+                        $options = [];
+                        if (in_array('shift', $enabledModes)) {
+                            $options['shift'] = '🕒 Shift - Absen berdasarkan jadwal shift';
+                        }
+                        if (in_array('working_hours', $enabledModes)) {
+                            $options['working_hours'] = '⏰ Working Hours - Absen fleksibel dengan jam kerja minimum';
+                        }
+                        
+                        return $options;
+                    })
+                    ->default(function () use ($isSuperAdmin) {
+                        if ($isSuperAdmin) return null;
+                        
+                        $enabledModes = static::getEnabledModes();
+                        
+                        // Set default ke mode pertama yang aktif
+                        return $enabledModes[0] ?? 'shift';
+                    })
+                    ->dehydrated() // Pastikan nilai tetap tersimpan meskipun hidden
+                    ->required(fn ($get) => !$isSuperAdmin && $get('role') === 'karyawan')
                     ->native(false)
                     ->live()
-                    ->visible(fn ($get) => !$isSuperAdmin && $get('role') === 'karyawan')
+                    ->visible(function ($get) use ($isSuperAdmin) {
+                        if ($isSuperAdmin || $get('role') !== 'karyawan') return false;
+                        
+                        $enabledModes = static::getEnabledModes();
+                        
+                        // Tampilkan field jika ada lebih dari 1 mode aktif
+                        // Jika hanya 1 mode, otomatis terisi tanpa perlu user pilih
+                        return count($enabledModes) > 1;
+                    })
+                    ->afterStateUpdated(function ($state, callable $set) use ($isSuperAdmin) {
+                        if ($state !== 'shift') {
+                            $set('shift_id', null);
+                        }
+                    })
                     ->helperText(fn ($get) => $get('work_type') === 'working_hours' 
                         ? '💡 Karyawan bisa check-in kapan saja, checkout setelah jam minimum'
                         : '💡 Karyawan harus absen sesuai jadwal shift'),
@@ -159,12 +200,51 @@ class UserResource extends Resource
                     ->relationship(
                         'shift', 
                         'name',
-                        fn ($query) => $query->where('organization_id', auth()->user()->organization_id)
+                        function ($query) {
+                            $user = auth()->user();
+                            if ($user && $user->organization_id) {
+                                return $query->where('organization_id', $user->organization_id);
+                            }
+                            return $query;
+                        }
                     )
                     ->searchable()
                     ->preload()
-                    ->visible(fn ($get) => !$isSuperAdmin && $get('role') === 'karyawan' && $get('work_type') === 'shift')
-                    ->required(fn ($get) => !$isSuperAdmin && $get('role') === 'karyawan' && $get('work_type') === 'shift')
+                    ->visible(function ($get) use ($isSuperAdmin) {
+                        if ($isSuperAdmin || $get('role') !== 'karyawan') return false;
+                        
+                        $enabledModes = static::getEnabledModes();
+                        
+                        // Jika hanya ada 1 mode dan itu shift, tampilkan
+                        if (count($enabledModes) === 1 && in_array('shift', $enabledModes)) {
+                            return true;
+                        }
+                        
+                        // Jika ada 2 mode, tampilkan jika work_type = shift
+                        if (count($enabledModes) > 1) {
+                            return $get('work_type') === 'shift';
+                        }
+                        
+                        return false;
+                    })
+                    ->required(function ($get) use ($isSuperAdmin) {
+                        if ($isSuperAdmin || $get('role') !== 'karyawan') return false;
+                        
+                        $enabledModes = static::getEnabledModes();
+                        
+                        // Required jika:
+                        // 1. Hanya mode shift yang aktif, ATAU
+                        // 2. Mode shift aktif DAN user pilih work_type = shift
+                        if (count($enabledModes) === 1 && in_array('shift', $enabledModes)) {
+                            return true;
+                        }
+                        
+                        if (count($enabledModes) > 1 && $get('work_type') === 'shift') {
+                            return true;
+                        }
+                        
+                        return false;
+                    })
                     ->helperText('Pilih shift untuk karyawan ini'),
             ]);
     }
